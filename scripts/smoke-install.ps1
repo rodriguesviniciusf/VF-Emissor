@@ -21,4 +21,8 @@ try {
   $Health=$null
   1..20 | ForEach-Object { if (!$Health) { Start-Sleep -Milliseconds 500;try {$Health=Invoke-RestMethod http://127.0.0.1:8788/health} catch {} } }
   if ($Health.version -ne $Version) { throw 'A instalacao nao iniciou a versao esperada.' }
+  $Cities = Invoke-RestMethod http://127.0.0.1:8788/municipios.json
+  if ($Cities.municipalities.Count -lt 5571) { throw 'Catalogo offline incompleto no instalador.' }
+  $Assistance = Invoke-WebRequest http://127.0.0.1:8788/assistance-ui.js
+  if ($Assistance.Content -notmatch 'function editorPayload') { throw 'Interface de recuperacao ausente na instalacao.' }
 } finally { Stop-Process -Id $Process.Id -ErrorAction SilentlyContinue }

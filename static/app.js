@@ -16,7 +16,7 @@ function check(name,label,o={}){return `<label class="check"><input type="checkb
 function notice(text,kind=''){return `<div class="notice ${kind}">${text}</div>`;}
 function badge(v){const c=['AUTORIZADA','REGISTRADO'].includes(v)?'ok':['REJEITADA','CANCELADA','DENEGADA'].includes(v)?'bad':v==='RASCUNHO'?'':'wait';return `<span class="badge ${c}">${esc(v)}</span>`;}
 function toast(msg,error=false){const el=$('#toast');el.textContent=msg;el.className=error?'error':'';el.style.display='block';clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.style.display='none',error?12000:4500);}
-async function api(action,p={}){const r=await fetch('/api/action',{method:'POST',headers:{'Content-Type':'application/json','X-VF-CSRF':S.csrf},body:JSON.stringify({action,cid:S.cid,...p})});const d=await r.json();if(!r.ok)throw Error(d.error||'Não foi possível concluir.');return d;}
+async function api(action,p={}){const r=await fetch('/api/action',{method:'POST',headers:{'Content-Type':'application/json','X-VF-CSRF':S.csrf,'X-VF-Company':S.cid||''},body:JSON.stringify({action,cid:S.cid,...p})});const d=await r.json();if(!r.ok)throw Error(d.error||'Não foi possível concluir.');return d;}
 async function refresh(cid=S.cid){const r=await fetch('/api/state?cid='+encodeURIComponent(cid||''));const d=await r.json();if(!r.ok)throw Error(d.error);S=d;if(!S.company&&S.companies&&S.companies.length){S.company=S.companies.find(c=>c._id===(S.cid||cid))||S.companies[0];}render();}
 function download(kind,id=''){window.open('/api/download?'+new URLSearchParams({kind,id,cid:S.cid||''}),'_blank','noopener');}
 function closeDialog(id){$('#'+id)?.remove();}

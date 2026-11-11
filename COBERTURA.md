@@ -1,4 +1,4 @@
-# Cobertura e trabalho restante — 0.14.0
+# Cobertura e trabalho restante — 0.15.0
 
 Este arquivo distingue implementação, verificação local e validação com a SEFAZ. O projeto ainda não reproduz integralmente o NF-e Mais.
 
@@ -41,3 +41,13 @@ Ambiente interno alinhado ao login: navegação verde escura com ícones vetoria
 Importação assistida com modelo XLSX; fornecedores; estoque quantitativo opcional por empresa/ambiente, ajustes, vínculos, conversão e estorno; backup automático enquanto o aplicativo está aberto e restauração por empresa; central de rejeições com atalhos; pacote mensal com XML e CSV/HTML; clonagem da última nota; cópia adicional dos XML em pasta sincronizada do Google Drive.
 
 A restauração cria cópia anterior e desabilita produção para revisão de numeração. A cópia para pasta sincronizada não é uma confirmação de upload à nuvem. Não há autenticação direta na API Google, controle de custo médio/CMV, SPED, apuração fiscal nem novas UFs/regimes nesta versão. Continua necessária homologação com A1 real, SEFAZ e validação da instalação no Windows.
+
+
+## 0.15.0 — cadastros e continuidade da edição
+
+- Municípios/UF/IBGE: tabela oficial DTB 2025 incluída para consulta offline. Atualização reproduzível em scripts/refresh_municipalities.py.
+- CEP e CNPJ: consultas pontuais a ViaCEP/BrasilAPI, com limites, cache por contexto, resposta filtrada, prévia e aplicação seletiva. Sem classificação tributária, IE automática, CPF público ou varredura de bases. Dependem da disponibilidade dos provedores.
+- Cópias de edição: banco local, separação por empresa/ambiente, produto em edição, controle de versão e recuperação após reinício. Não reservam números e não sobrescrevem nota alterada/finalizada. Não substituem o backup da empresa.
+- Configurações: certificado, estoque e Drive dentro de Geral. Avisos na tela inicial levam às seções correspondentes.
+- O contexto da empresa acompanha as requisições do aplicativo para impedir gravação de uma aba antiga após troca de empresa em outro acesso.
+- Cobertura fiscal permanece AL/SVRS, modelo 55, A1, CRT 1/3 e 2026. Nenhuma emissão real com A1 foi feita nesta atualização.

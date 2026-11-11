@@ -147,6 +147,11 @@ function decorateAddressSettings(){
   const helper=document.createElement('p');helper.className='hint city-helper';helper.textContent='Escolha a UF e o município. CEP é consultado no ViaCEP; CNPJ na BrasilAPI, quando solicitado.';form.append(helper);const status=document.createElement('div');status.className='lookup-status';status.setAttribute('role','status');status.setAttribute('aria-live','polite');form.append(status);
  }
 }
+// Geral reúne identidade, certificado e rotinas da empresa, mantendo os formulários separados.
+const configGeneralBeforeUnified=configGeneral;
+configGeneral=function(){return configGeneralBeforeUnified()+`<div id="general-certificate" class="general-settings-section" tabindex="-1">${configCertificate()}</div><div id="general-operations" class="general-settings-section" tabindex="-1">${operationalSettings()}</div>`;};
+for(let i=configTabs.length-1;i>=0;i--)if(['certificado','operacoes'].includes(configTabs[i][0]))configTabs.splice(i,1);
+handlers['attention-config']=b=>{const target={certificado:'general-certificate',operacoes:'general-operations'}[b.dataset.tab];configTab=target?'geral':b.dataset.tab;location.hash='configuracoes';render();if(target)requestAnimationFrame(()=>{const el=document.getElementById(target);el?.scrollIntoView({behavior:'smooth',block:'start'});el?.focus({preventScroll:true});});};
 const renderBeforeAssistance=render;
-render=function(){renderBeforeAssistance();if(S.authenticated===false)return;decorateAddressSettings();if(page==='inicio'&&S.cid){const html=companyAttention();if(html){const hero=$('#content .workspace-metrics');if(hero)hero.insertAdjacentHTML('afterend',html);else $('#content').insertAdjacentHTML('afterbegin',html);}}};
+render=function(){if(['certificado','operacoes'].includes(configTab))configTab='geral';renderBeforeAssistance();if(S.authenticated===false)return;decorateAddressSettings();if(page==='inicio'&&S.cid){const html=companyAttention();if(html){const hero=$('#content .workspace-metrics');if(hero)hero.insertAdjacentHTML('afterend',html);else $('#content').insertAdjacentHTML('afterbegin',html);}}};
 if(S.version)render();

@@ -1,6 +1,8 @@
 name: Publicar VF Emissor para Windows
 on:
   push:
+    branches: ['main']
+    paths: ['version.json']
     tags: ['v*']
   workflow_dispatch:
 permissions:
@@ -26,6 +28,11 @@ jobs:
           if ($LASTEXITCODE) { throw 'Testes do motor falharam.' }
           & .\portable\python.exe -m unittest discover -s tests -p 'test_*.py'
           if ($LASTEXITCODE) { throw 'Testes web/desktop falharam.' }
+          node --check .\static\assistance-ui.js
+          if ($LASTEXITCODE) { throw 'JavaScript de assistência inválido.' }
+      - name: Conferir disponibilidade das consultas públicas
+        shell: pwsh
+        run: .\portable\python.exe .\scripts\check_public_lookups.py
       - name: Instalar compilador do instalador
         shell: pwsh
         run: choco install nsis --no-progress -y

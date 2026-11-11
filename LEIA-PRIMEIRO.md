@@ -1,9 +1,9 @@
-# VF Emissor 0.14.0 — Windows
+# VF Emissor 0.15.0 — Windows
 
 ## Instalar e abrir
 
 1. Encerre a versão antiga do emissor.
-2. Execute **VF-Emissor-Setup-0.14.0.exe** e conclua a instalação. Requer Windows 10/11 de 64 bits.
+2. Execute **VF-Emissor-Setup-0.15.0.exe** e conclua a instalação. Requer Windows 10/11 de 64 bits.
 3. Abra o atalho **VF Emissor** criado na área de trabalho ou no menu Iniciar.
 4. Se você já usava a versão anterior, antes de cadastrar empresas clique em **Já usava o emissor? Importar meus dados** e informe o caminho da pasta antiga do emissor ou sua pasta `dados`. A origem não será apagada.
 5. Entre com o CNPJ e a senha da empresa que já utilizava. Não é necessário refazer os cadastros após a importação.
@@ -22,7 +22,7 @@ Cada empresa tem seus próprios cadastros, perfis, parâmetros e documentos. Dow
 
 ## Certificado e senha
 
-Em **Configurações → Certificado**, selecione o A1 da empresa e deixe marcada a opção de salvar neste computador. Arquivo e senha são guardados juntos, criptografados pela DPAPI da conta do Windows. O certificado é restaurado nos próximos acessos sem selecionar o PFX e digitar a senha novamente.
+Em **Configurações → Geral → Certificado A1**, selecione o A1 da empresa e deixe marcada a opção de salvar neste computador. Arquivo e senha são guardados juntos, criptografados pela DPAPI da conta do Windows. O certificado é restaurado nos próximos acessos sem selecionar o PFX e digitar a senha novamente.
 
 O cofre é separado por empresa. Um certificado vencido ou que não possa ser aberto gera uma indicação para recarregá-lo. Em outro computador/conta do Windows, carregue o A1 novamente. Use **Remover A1 salvo** para apagar somente o cofre da empresa ativa.
 
@@ -40,7 +40,7 @@ Para publicar versões, use o pacote de código e leia **PUBLICAR-ATUALIZACOES.m
 
 ## Verificação e limites
 
-Leia **VALIDACAO.md** e **COBERTURA.md**. A versão 0.14.0 publicada no repositório VF-Emissor passou nos testes nativos do Windows, na DPAPI e nas verificações de instalação/reinstalação, atalho e preservação de dados pelo GitHub Actions. A homologação com seu A1 e seus cenários fiscais ainda precisa ser realizada antes de habilitar produção.
+Leia **VALIDACAO.md** e **COBERTURA.md**. O fluxo da versão 0.15.0 executa testes nativos do Windows, DPAPI e verificações de instalação/reinstalação, atalho, preservação de dados e catálogo offline antes da publicação. Consulte o resultado desta versão em VALIDACAO.md. A homologação com seu A1 e seus cenários fiscais ainda precisa ser realizada antes de habilitar produção.
 
 ## Visual 0.14.0
 
@@ -66,7 +66,7 @@ Documentos autorizados, cancelados e denegados não são alterados por este flux
 
 ## Estoque opcional por empresa
 
-Em **Configurações → Estoque e Google Drive**, escolha **Controlar estoque? Sim/Não**. O padrão é Não. Ao ativar, informe o saldo inicial por ajuste. Não há lançamento retroativo automático das notas já autorizadas. Cada ambiente tem seu saldo: homologação não movimenta produção.
+Em **Configurações → Geral → Estoque e Google Drive**, escolha **Controlar estoque? Sim/Não**. O padrão é Não. Ao ativar, informe o saldo inicial por ajuste. Não há lançamento retroativo automático das notas já autorizadas. Cada ambiente tem seu saldo: homologação não movimenta produção.
 
 Novas NF-e autorizadas movimentam o estoque conforme o tipo de operação. XML recebidos podem movimentar estoque na importação, com escolha do produto e fator de conversão de unidade. Sem vínculo, o item fica pendente para revisão. Quantidade do XML × fator equivale à quantidade na unidade do cadastro. NF-e de entrada emitida por terceiro tem o sentido inverso para o estoque do destinatário. Cancelamento confirmado ou importado com evento processado gera um estorno vinculado, sem apagar o movimento original. Consultas repetidas não duplicam movimentos.
 
@@ -84,6 +84,27 @@ Em **Detalhes da nota → Duplicar**, reaproveite os dados em novo rascunho. A t
 
 ## XML local e cópia adicional no Google Drive
 
-O XML original permanece no PC de emissão, no arquivo local do emissor. Em **Configurações → Estoque e Google Drive**, ative a cópia e indique uma pasta existente sincronizada pelo Google Drive para computador, da sua conta ou compartilhada pelo escritório. Cada empresa escolhe suas opções; as cópias usam subpastas de CNPJ, ambiente e mês.
+O XML original permanece no PC de emissão, no arquivo local do emissor. Em **Configurações → Geral → Estoque e Google Drive**, ative a cópia e indique uma pasta existente sincronizada pelo Google Drive para computador, da sua conta ou compartilhada pelo escritório. Cada empresa escolhe suas opções; as cópias usam subpastas de CNPJ, ambiente e mês.
 
 O emissor faz somente cópias adicionais dos XML autorizados e eventos registrados. Opcionalmente copia também XML de entrada. Não move ou apaga os originais e não envia certificado, senha nem banco de dados. Falha na cópia não altera uma autorização nem impede a emissão; a rotina tenta novamente enquanto o programa estiver aberto. O status **Copiado para a pasta sincronizada** confirma a cópia no sistema de arquivos. A confirmação do envio à nuvem e a disponibilidade da conta são informadas pelo aplicativo Google Drive.
+
+
+## Cadastros assistidos — 0.15.0
+
+Em emitentes, clientes e fornecedores, escolha a UF e comece a digitar o município. Ao escolher um nome da lista, o IBGE de sete dígitos é preenchido. A tabela oficial DTB/IBGE de 31/12/2025 está no instalador; a pesquisa funciona sem internet. Também é possível informar o código completo para identificar município e UF.
+
+Ao completar um CEP de oito dígitos, ou clicar em **Buscar CEP**, o emissor consulta o ViaCEP e abre uma prévia. Escolha os campos e clique em **Aplicar dados selecionados**. Número e complemento da residência não são deduzidos do CEP. Município/UF/IBGE são aplicados em conjunto.
+
+Para CNPJ, clique em **Consultar CNPJ**. A BrasilAPI retorna os dados disponíveis e a prévia exibe situação cadastral e CNAE para conferência. Nome, endereço e outros campos só são preenchidos após aplicar a prévia; use **Salvar** para gravar o cadastro. IE, regime e tributação não são alterados. A consulta pública suporta CNPJ numérico; outros formatos permanecem com preenchimento manual. Somente o CEP ou CNPJ consultado é enviado ao provedor indicado, sem XML, A1 ou senhas. Os serviços gratuitos podem ficar indisponíveis; o formulário e o preenchimento manual continuam disponíveis.
+
+## Cópia automática de edição — 0.15.0
+
+Ao editar uma NF-e, as alterações são copiadas para o banco local após cerca de um segundo de pausa. A faixa no formulário informa quando o banco confirmou a gravação ou quando houve falha. Também existe **Salvar cópia agora**. A cópia inclui o produto ainda em edição, mas não o grava no cadastro geral, não reserva numeração e não prepara nem transmite XML.
+
+Na tela inicial, use **Recuperar rascunhos** para conferir as cópias da empresa e ambiente atuais. Se a nota original mudou ou foi finalizada, a recuperação exige uma nova NF-e, renovando a identidade e as revisões fiscais. Confira data, itens e tributação antes de concluir. **Apenas salvar** grava a nota e remove a cópia de edição correspondente. **Guardar e voltar** mantém as cópias confirmadas. **Descartar cópia** apaga somente essa cópia, preservando notas salvas e XML. Há limite de 50 cópias por empresa/ambiente e 1 MB por cópia; salve a nota manualmente quando necessário. Caracteres digitados imediatamente antes de uma queda, sem confirmação de gravação, podem não ter sido copiados.
+
+## Configurações e avisos — 0.15.0
+
+Certificado A1, estoque e cópia adicional para o Google Drive estão na aba **Geral**. As abas separadas de Certificado e Estoque/Google Drive foram removidas. Cada grupo mantém seu botão de salvar e continua vinculado à empresa ativa.
+
+A tela inicial mostra cópias recuperáveis, certificado próximo do vencimento, backup atrasado/pendente e cópias de XML pendentes para o Drive. Os atalhos abrem a seção correspondente. Nenhum alerta de Drive representa confirmação de envio à nuvem: o emissor confirma a cópia local; o aplicativo Google Drive realiza a sincronização.

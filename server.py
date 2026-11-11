@@ -585,6 +585,9 @@ class Handler(BaseHTTPRequestHandler):
             if not PREVIEW:
                 if not session_cid and not (registering or importing or p.get('action') in ('shutdown','lookup_public')):return self.reply(dict(error='Entre na empresa para continuar.'),status=401)
                 if session_cid and p.get('action')=='save_catalog' and p.get('kind')=='company' and p.get('id') and p['id']!=session_cid:return self.reply(dict(error='Cadastro pertence a outra empresa.'),status=403)
+                expected_company=self.headers.get('X-VF-Company','')
+                if session_cid and ((expected_company and expected_company!=session_cid) or (str(p.get('action','')).startswith('editor_') and p.get('cid')!=session_cid)):
+                    return self.reply(dict(error='A empresa foi alterada em outro acesso. Recarregue a página antes de continuar; nenhuma edição foi gravada em outra empresa.'),status=409)
                 p['cid']=session_cid or ''
             elif session_cid:p['cid']=session_cid
             value=action(p); self.reply(value)
