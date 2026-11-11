@@ -16,7 +16,11 @@ Após guardar, reabrir a página e recuperar a edição, modelo, cliente, quanti
 
 ## Windows
 
-O workflow da versão executa a suíte completa com Python portátil, DPAPI, sintaxe da interface, compilação NSIS, instalação/reinstalação, atalho e preservação dos dados. Também confere os arquivos do Modo Simples na instalação. O resultado final é publicado em Actions do repositório VF-Emissor antes da Release estável.
+O workflow [43016451279](https://github.com/rodriguesviniciusf/VF-Emissor/actions/runs/43016451279) concluiu com sucesso em 11/11/2026 para o código 02d588546983b0892492598c9d616764f6cbbe8a. Foram aprovados 118 testes do motor e 194 dos 195 testes web/desktop. O único teste ignorado no Windows aplica-se a plataformas sem DPAPI; a proteção nativa DPAPI foi exercitada.
+
+Também passaram sintaxe da interface, compilação NSIS, instalação e reinstalação silenciosas, atalho na área de trabalho, preservação do marcador na pasta de dados, inicialização da versão instalada e disponibilidade do catálogo offline e dos arquivos do Modo Simples. As consultas reais de CEP e CNPJ retornaram sucesso. A Release v0.16.1 foi publicada após essas verificações.
+
+O instalador publicado tem 22.499.935 bytes e SHA-256 `68b2ea71bdc123c633c0e69f741f3e71e377d40fda8a31683c7a996336aa8e2d`. O download foi conferido e corresponde ao manifesto de atualização e ao digest publicado no GitHub.
 
 ## Limites
 
