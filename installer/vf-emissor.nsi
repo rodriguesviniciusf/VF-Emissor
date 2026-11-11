@@ -4,7 +4,7 @@ Unicode true
 !include "FileFunc.nsh"
 !include "x64.nsh"
 !ifndef VERSION
- !define VERSION "0.16.2"
+ !define VERSION "0.16.3"
 !endif
 !ifndef SOURCE
  !define SOURCE ".."

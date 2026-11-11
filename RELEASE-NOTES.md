@@ -1,10 +1,10 @@
-VF Emissor 0.16.2
+VF Emissor 0.16.3
 
-- Corrige o erro Cannot read properties of null (reading checked) ao carregar o A1: o botão agora abre o formulário atual, com persistência marcada por padrão.
-- Unifica o formulário do certificado e captura arquivo, senha e preferência antes da leitura assíncrona. Fechamento da janela ou troca de empresa interrompem a operação antes do envio.
-- Certificado e senha são salvos no cofre DPAPI da conta do Windows, separados por empresa, e recarregados automaticamente nos próximos acessos/reinícios.
-- Mensagens distinguem gravação protegida e uso somente na sessão; senha do formulário é limpa após a operação.
+- Corrige a prévia do DANFE de produção, que forçava tpAmb=2 na renderização e substituía visualmente o destinatário pela mensagem de homologação.
+- Preserva o ambiente e o nome do destinatário do XML. A prévia mantém a marca SEM VALOR FISCAL e recebe o rodapé PREVIA DO DANFE - SEM AUTORIZACAO DE USO em todas as páginas.
+- O XML e o protocolo não são alterados. O DANFE definitivo de produção continua exigindo protocolo de autorização correspondente.
+- Notas criadas em homologação conservam esse ambiente; mudar a configuração da empresa não converte rascunhos antigos.
 
-Encerre o emissor antes de instalar manualmente. A atualização automática continua pelo atalho e pelo canal VF-Emissor. Cadastros, modelos, XML e cofres existentes são preservados. Depois de atualizar, carregue o A1 uma vez com a opção de salvar marcada. Em outro computador ou conta do Windows, carregue-o novamente.
+Instale com o emissor encerrado ou abra novamente pelo atalho para receber a atualização no canal VF-Emissor. Cadastros, XML, modelos e certificados protegidos são preservados.
 
-Testes usam certificados sintéticos. Nenhuma senha ou certificado real foi utilizado. Cobertura fiscal preservada: AL/SVRS, A1, modelo 55, CRT 1/3 e 2026.
+Os testes utilizam documentos sintéticos e não transmitem notas reais. A correção do A1 da versão 0.16.2 está incluída. Cobertura fiscal preservada: AL/SVRS, A1, modelo 55, CRT 1/3 e 2026.

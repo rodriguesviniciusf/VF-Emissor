@@ -669,7 +669,7 @@ class FiscalService:
 
 def render_danfe(xml_data, is_preview=False):
     """Renderização local; nunca envia XML a serviços de PDF."""
-    from brazilfiscalreport.danfe import Danfe
+    from brazilfiscalreport.danfe import Danfe, DanfeConfig, FooterStamp
     root=parse_xml(xml_data)
     inf=root.find('n:NFe/n:infNFe',{'n':NS}) if ET.QName(root).localname=='nfeProc' else root.find('n:infNFe',{'n':NS})
     if inf is None:raise ValueError('XML não contém NF-e.')
@@ -680,7 +680,7 @@ def render_danfe(xml_data, is_preview=False):
         if ET.QName(root).localname!='nfeProc' or prot is None or text(prot,'n:cStat') not in ('100','150') or text(prot,'n:tpAmb')!=environment or text(prot,'n:chNFe')!=inf.get('Id','')[3:]:
             raise ValueError('DANFE de produção exige XML com protocolo de autorização correspondente.')
         validate_schema(xml_data,'procNFe_v4.00.xsd')
-    if is_preview:
-        tp_amb=root.find('.//{http://www.portalfiscal.inf.br/nfe}tpAmb')
-        if tp_amb is not None: tp_amb.text='2'
-    return bytes(Danfe(xml=serialize(root).decode('utf-8')).output())
+    # Preserva tpAmb: o renderizador usa esse campo também para o nome do destinatário.
+    # A prévia é identificada separadamente, sem alterar XML, ambiente ou protocolo.
+    config=DanfeConfig(footer_stamp=FooterStamp(text='PREVIA DO DANFE - SEM AUTORIZACAO DE USO')) if is_preview else None
+    return bytes(Danfe(xml=serialize(root).decode('utf-8'),config=config).output())
