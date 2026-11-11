@@ -1,9 +1,9 @@
-# VF Emissor 0.16.0 — Windows
+# VF Emissor 0.16.1 — Windows
 
 ## Instalar e abrir
 
 1. Encerre a versão antiga do emissor.
-2. Execute **VF-Emissor-Setup-0.16.0.exe** e conclua a instalação. Requer Windows 10/11 de 64 bits.
+2. Execute **VF-Emissor-Setup-0.16.1.exe** e conclua a instalação. Requer Windows 10/11 de 64 bits.
 3. Abra o atalho **VF Emissor** criado na área de trabalho ou no menu Iniciar.
 4. Se você já usava a versão anterior, antes de cadastrar empresas clique em **Já usava o emissor? Importar meus dados** e informe o caminho da pasta antiga do emissor ou sua pasta `dados`. A origem não será apagada.
 5. Entre com o CNPJ e a senha da empresa que já utilizava. Não é necessário refazer os cadastros após a importação.
@@ -110,7 +110,7 @@ Certificado A1, estoque e cópia adicional para o Google Drive estão na aba **G
 A tela inicial mostra cópias recuperáveis, certificado próximo do vencimento, backup atrasado/pendente e cópias de XML pendentes para o Drive. Os atalhos abrem a seção correspondente. Nenhum alerta de Drive representa confirmação de envio à nuvem: o emissor confirma a cópia local; o aplicativo Google Drive realiza a sincronização.
 
 
-## Modo Simples — 0.16.0
+## Modo Simples — 0.16.1
 
 Abra **Configurações → Geral → Modo Simples → Configurar Modo Simples**. Use **Criar modelo**, informe nome, natureza, UF do cliente, indicador de IE, consumidor final, presença, pagamento e transporte. Escolha se cada produto usa seu perfil tributário ou se o modelo aplica um perfil definido. O perfil deve estar revisado e ser compatível com a UF, o regime e a operação. Marque produtos somente se quiser restringir a seleção; nenhum marcado oferece os produtos compatíveis do cadastro.
 

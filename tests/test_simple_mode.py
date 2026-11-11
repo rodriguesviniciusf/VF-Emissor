@@ -46,6 +46,16 @@ class SimpleModeTests(unittest.TestCase):
  def test_resolve_does_not_allocate_number_create_document_or_stock(self):
     n=self.note();self.assertEqual(n['number'],'');self.assertEqual(self.db.list('note',self.cid),[]);self.assertEqual(FiscalStore(self.db).list(self.cid),[]);self.assertEqual(self.db.list('stock_move',self.cid),[])
     self.assertEqual(server.next_number(self.db,self.cid,'2','1'),'1')
+ def test_restore_into_another_installation_remaps_configuration_identity(self):
+    import company_recovery
+    self.save_config(default_mode='simple',default_model_id=self.mid);raw=backup_company(self.db,self.cid,self.co['CNPJCPF'])
+    path=Path(self.tmp.name)/'other-pc';path.mkdir();target=Store(path/'vf.sqlite3');FiscalStore(target);EventStore(target)
+    try:
+        cid=target.save('company',self.co);self.assertNotEqual(cid,self.cid)
+        token=company_recovery.upload_start(target,cid,len(raw));company_recovery.upload_chunk(target,cid,token,0,raw);company_recovery.inspect(target,cid,token);company_recovery.restore(target,cid,token,'RESTAURAR '+self.co['CNPJCPF'])
+        cfg=simple.load(target,cid);self.assertEqual(cfg['default_mode'],'simple');self.assertEqual(cfg['models'][0]['id'],self.mid);self.assertEqual(target.list('simple_config',cid)[0][0],'simple-'+cid)
+        n=simple.resolve(target,cid,dict(model_id=self.mid,recipient_id=self.rid,rows=[dict(product_id=self.pid)]));self.assertEqual(simple.verify(target,cid,n),[])
+    finally:target.db.close()
  def test_sn_same_calculation_and_exact_xml_as_complete(self):
     n=self.note();self.assertEqual(simple.verify(self.db,self.cid,n),[]);self.assertEqual(server.action(dict(action='validate',cid=self.cid,note=n))['issues'],[])
     n.update(number='1',cnf='12345678');full=copy.deepcopy(n);full.pop('simple_mode');full['items'][0].pop('simple_source_stamp');full['items'][0].pop('simple_product_id')

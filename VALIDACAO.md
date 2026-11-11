@@ -1,11 +1,11 @@
-# Validação 0.16.0
+# Validação 0.16.1
 
 ## Verificações locais
 
 - Motor fiscal/eventos: 118 testes aprovados.
-- Web/desktop: 194 testes encontrados, 193 aprovados e 1 teste nativo de DPAPI inaplicável ao Linux.
-- Total local: 311 aprovados e 1 teste exclusivo do Windows não executado no Linux.
-- Os 30 testes do Modo Simples cobrem configuração por empresa, persistência/backup, liberação explícita, concorrência de configurações, contexto de UF/IE/regime, perfis e alterações, preços/descontos/pagamentos, produtos permitidos, igualdade de cálculo e XML nos CRT 1/3, confirmação do resumo, preparação/assinatura e envio simulado pelo fluxo atual, idempotência de rascunho e preparação, estados fiscais incertos, recuperação, passagem ao modo completo, ambiente, autenticação/CSRF e aba de empresa desatualizada.
+- Web/desktop: 195 testes encontrados, 194 aprovados e 1 teste nativo de DPAPI inaplicável ao Linux.
+- Total local: 312 aprovados e 1 teste exclusivo do Windows não executado no Linux.
+- Os 31 testes do Modo Simples cobrem configuração por empresa, persistência/backup e restauração em outra instalação, liberação explícita, concorrência de configurações, contexto de UF/IE/regime, perfis e alterações, preços/descontos/pagamentos, produtos permitidos, igualdade de cálculo e XML nos CRT 1/3, confirmação do resumo, preparação/assinatura e envio simulado pelo fluxo atual, idempotência de rascunho e preparação, estados fiscais incertos, recuperação, passagem ao modo completo, ambiente, autenticação/CSRF e aba de empresa desatualizada.
 - JavaScript, compilação Python e git diff --check verificados.
 
 ## Interface

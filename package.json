@@ -1,6 +1,6 @@
 {
   "name": "vf-emissor-web-local",
-  "version": "0.16.0",
+  "version": "0.16.1",
   "private": true,
   "scripts": {
     "dev": "python3 launch_preview.py",

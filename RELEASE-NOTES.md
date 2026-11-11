@@ -1,4 +1,4 @@
-VF Emissor 0.16.0
+VF Emissor 0.16.1
 
 - Modo Simples com três etapas: Cliente → Produtos → Conferir e emitir.
 - Tela própria em Configurações → Geral → Modo Simples, sem acrescentar abas. Preferência de abertura e modelos separados por empresa.
@@ -8,7 +8,8 @@ VF Emissor 0.16.0
 - Conferência final com confirmação explícita para preparar e transmitir pelo mesmo serviço fiscal do modo completo.
 - Recuperação da edição, revalidação após mudanças em cadastros/modelos e passagem ao modo completo preservando o preenchimento.
 - Tentativas repetidas da mesma edição reutilizam o rascunho e sua numeração. Situações fiscais incertas seguem as consultas/bloqueios existentes.
-- Configuração incluída no backup da empresa e identificada na prévia de restauração.
+- Configuração incluída no backup da empresa e identificada na prévia de restauração, com remapeamento correto ao restaurar em outra instalação.
+- Pendências com atalhos para o campo correspondente e produtos ordenados pelo histórico do cliente.
 
 Primeiro configure e libere um modelo em Geral; depois escolha Simples como modo padrão. Os modelos atendem NF-e normal de saída dentro da cobertura atual. ST, bases/valores retidos específicos, grupos ou ajustes especiais e pagamentos que exijam detalhamento adicional continuam no modo completo. O modelo não deduz enquadramento fiscal nem habilita produção.
 

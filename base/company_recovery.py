@@ -159,8 +159,8 @@ def restore(store,cid,token,ack):
                     rid=cid;d['CNPJCPF']=co['CNPJCPF'];d['environment']='2';d['production_enabled']=False
                     if co.get('password_hash'):d['password_hash']=co['password_hash']
                     else:d.pop('password_hash',None)
-                elif kind in ('settings','business_settings','drive_status','backup_status'):
-                    rid={'settings':'preferences-','business_settings':'business-','drive_status':'drive-status-','backup_status':'backup-status-'}[kind]+cid
+                elif kind in ('settings','business_settings','drive_status','backup_status','simple_config'):
+                    rid={'settings':'preferences-','business_settings':'business-','drive_status':'drive-status-','backup_status':'backup-status-','simple_config':'simple-'}[kind]+cid
                 elif kind=='stock_move':rid='stock-'+identity(cid,d['environment'],d['source'],d['source_id'],d['line'],'reverse' if d.get('reverse') else 'original')
                 elif kind=='stock_mapping' and source!=cid:
                     if not all(k in d for k in ('source','source_id','line')):continue
