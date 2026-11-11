@@ -19,6 +19,10 @@ Conferidas seis abas nas configurações. Geral contém certificado A1, estoque 
 
 ## Windows e limites
 
-O workflow desta versão executa os testes nativos, DPAPI, compilação NSIS e instalação/reinstalação, atalho, preservação dos dados, inicialização e presença do catálogo offline e interface de recuperação antes de publicar. O resultado da execução pode ser conferido em Actions no repositório VF-Emissor.
+O workflow [42996073370](https://github.com/rodriguesviniciusf/VF-Emissor/actions/runs/42996073370) concluiu com sucesso em 11/11/2026, usando o código c2ad03d8876eb01cf79fb5a52a1078109f1bc6b7. Foram aprovados 118 testes do motor e 163 dos 164 testes web/desktop; somente o teste destinado a plataformas sem DPAPI foi ignorado. O teste nativo de DPAPI, incluindo recuperação após reiniciar o processo, foi aprovado no Windows.
+
+As consultas reais de CEP e CNPJ retornaram sucesso também no Windows. A compilação NSIS, instalação e reinstalação silenciosas, criação do atalho, preservação do marcador na pasta de dados, inicialização da versão instalada, catálogo offline e interface de recuperação foram aprovados antes da publicação da Release v0.15.0.
+
+O instalador publicado e baixado para conferência tem 22.490.475 bytes. Seu SHA-256 é `bc174afe65024fbf3a379c9294ae5d02decdea03a3650143a5096bc4d8766a2d`, igual ao manifesto de atualização e ao digest do arquivo no GitHub.
 
 Nenhum A1 real nem transmissão fiscal real foi utilizado. Os serviços de CEP/CNPJ podem variar ou ficar indisponíveis. A sincronização efetiva para a nuvem continua a cargo do Google Drive para computador. A homologação dos cenários reais permanece necessária antes da produção.
