@@ -1,0 +1,22 @@
+__pycache__/
+*.pyc
+dados/
+Dados/
+qa-*/
+*.pfx
+*.p12
+*.dpapi
+*.sqlite3*
+*.db
+*.log
+dist/
+*.exe.part
+VF-Emissor-Setup-*.exe
+*.zip
+
+!portable/python312.zip
+
+# Runtime preparado no CI; não publicar binários, dados ou arquivos temporários
+portable/
+operacoes-temporarias/
+backups-empresas/

@@ -1,0 +1,48 @@
+name: Publicar VF Emissor para Windows
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+          architecture: x64
+      - name: Preparar Python embarcado e dependências públicas
+        shell: pwsh
+        run: python .\scripts\bootstrap_windows.py
+      - name: Validar versão e Python portátil
+        shell: pwsh
+        run: |
+          $version = (Get-Content version.json -Raw | ConvertFrom-Json).version
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "v$version") { throw 'Tag e version.json precisam coincidir.' }
+          & .\portable\python.exe -m unittest discover -s base -p 'test_*.py'
+          if ($LASTEXITCODE) { throw 'Testes do motor falharam.' }
+          & .\portable\python.exe -m unittest discover -s tests -p 'test_*.py'
+          if ($LASTEXITCODE) { throw 'Testes web/desktop falharam.' }
+      - name: Instalar compilador do instalador
+        shell: pwsh
+        run: choco install nsis --no-progress -y
+      - name: Compilar instalador com o canal deste repositório
+        shell: pwsh
+        run: .\scripts\build-release.ps1 -Repository "$env:GITHUB_REPOSITORY"
+      - name: Conferir instalação, atalho e preservação de dados
+        shell: pwsh
+        run: .\scripts\smoke-install.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: VF-Emissor-Windows
+          path: dist/*
+      - name: Publicar versão estável
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = (Get-Content version.json -Raw | ConvertFrom-Json).version
+          gh release create "v$version" "dist/VF-Emissor-Setup-$version.exe" "dist/update-manifest.json" --target "$env:GITHUB_SHA" --title "VF Emissor $version" --notes-file RELEASE-NOTES.md --latest

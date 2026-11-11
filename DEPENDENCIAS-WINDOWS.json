@@ -1,0 +1,22 @@
+{
+  "phonenumbers": "9.0.43",
+  "signxml": "4.5.1",
+  "pycparser": "3.12",
+  "requests": "2.34.2",
+  "fonttools": "4.68.0",
+  "BrazilFiscalReport": "1.4.0",
+  "lxml": "6.1.3",
+  "cryptography": "46.0.7",
+  "python-barcode": "0.16.1",
+  "requests_pkcs12": "1.27",
+  "cffi": "2.1.1",
+  "pillow": "13.0.0",
+  "certifi": "2026.10.23",
+  "fpdf2": "2.9.0",
+  "qrcode": "8.2",
+  "idna": "3.20",
+  "charset-normalizer": "3.5.2",
+  "urllib3": "2.8.0",
+  "openpyxl": "3.1.5",
+  "et_xmlfile": "2.0.0"
+}

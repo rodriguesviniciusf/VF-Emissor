@@ -1,0 +1,7 @@
+lxml>=5,<7
+cryptography>=43,<47
+signxml>=4,<5
+requests-pkcs12>=1.25,<2
+BrazilFiscalReport>=1.0,<2
+
+openpyxl>=3.1.5,<4
