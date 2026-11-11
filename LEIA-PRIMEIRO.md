@@ -40,7 +40,7 @@ Para publicar versões, use o pacote de código e leia **PUBLICAR-ATUALIZACOES.m
 
 ## Verificação e limites
 
-Leia **VALIDACAO.md** e **COBERTURA.md**. O instalador foi compilado, mas a instalação nativa no Windows, a DPAPI real e a homologação com seu A1 precisam de validação no ambiente Windows. O workflow incluído executa os testes nativos antes de publicar uma versão; ele ainda não foi executado em um repositório do escritório.
+Leia **VALIDACAO.md** e **COBERTURA.md**. A versão 0.14.0 publicada no repositório VF-Emissor passou nos testes nativos do Windows, na DPAPI e nas verificações de instalação/reinstalação, atalho e preservação de dados pelo GitHub Actions. A homologação com seu A1 e seus cenários fiscais ainda precisa ser realizada antes de habilitar produção.
 
 ## Visual 0.14.0
 
