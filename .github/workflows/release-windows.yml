@@ -32,6 +32,8 @@ jobs:
           if ($LASTEXITCODE) { throw 'JavaScript de assistência inválido.' }
           node --check .\static\simple-ui.js
           if ($LASTEXITCODE) { throw 'JavaScript do Modo Simples inválido.' }
+          node --test .\tests\certificate-ui.test.cjs
+          if ($LASTEXITCODE) { throw 'Regressao do certificado na interface.' }
       - name: Conferir disponibilidade das consultas públicas
         shell: pwsh
         run: .\portable\python.exe .\scripts\check_public_lookups.py

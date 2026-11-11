@@ -41,6 +41,20 @@ class DesktopDataTests(unittest.TestCase):
         rows=server.action(dict(action='search_products',cid=self.cid,query=query))['products']
         self.assertEqual([r['_id'] for r in rows],[self.p1])
     self.assertEqual(server.action(dict(action='search_products',cid=self.cid,query='privado'))['products'],[])
+ def test_saved_valid_a1_reloads_after_memory_expiry_and_restart(self):
+    import test_fiscal
+    fixture=test_fiscal.FiscalTests;fixture.setUpClass()
+    v=CertificateVault(self.root/'vault',None if sys.platform=='win32' else TestProtector())
+    try:
+        raw=fixture.pfx.read_bytes()
+        with patch.object(server,'vault',return_value=v):
+            result=server.action(dict(action='load_certificate',cid=self.cid,data=base64.b64encode(raw).decode(),password='senha-teste',remember=True))
+            self.assertTrue(result['saved']);disk=v.path(self.cid).read_bytes();self.assertNotIn(b'senha-teste',disk);self.assertNotIn(raw,disk)
+            server.CERTS.clear();self.assertEqual(server.certificate(self.cid).cnpj,self.co['CNPJCPF'])
+            server.CERTS[self.cid]=(server.CERTS[self.cid][0],time.time()-1)
+            self.assertEqual(server.certificate(self.cid).cnpj,self.co['CNPJCPF'])
+            with self.assertRaises(ValueError):server.certificate(self.cid2)
+    finally:fixture.tearDownClass()
  def test_archived_product_is_not_returned(self):
     server.action(dict(action='archive',kind='product',cid=self.cid,id=self.p1))
     self.assertEqual(server.action(dict(action='search_products',cid=self.cid))['products'],[])

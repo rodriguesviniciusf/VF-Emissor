@@ -1,18 +1,10 @@
-VF Emissor 0.16.1
+VF Emissor 0.16.2
 
-- Modo Simples com três etapas: Cliente → Produtos → Conferir e emitir.
-- Tela própria em Configurações → Geral → Modo Simples, sem acrescentar abas. Preferência de abertura e modelos separados por empresa.
-- Modelos por UF de destino e indicador de IE, com natureza, consumidor final, presença, pagamento, frete, observações e perfil tributário por produto ou pelo modelo.
-- Liberação explícita dos modelos revisados, controle de versão, seleção opcional de produtos e permissões comerciais para preço, desconto e pagamento.
-- Quantidade, preço, desconto e frete por item; totais calculados pelo motor existente. Fatura, parcelas e dados de transporte disponíveis no preenchimento.
-- Conferência final com confirmação explícita para preparar e transmitir pelo mesmo serviço fiscal do modo completo.
-- Recuperação da edição, revalidação após mudanças em cadastros/modelos e passagem ao modo completo preservando o preenchimento.
-- Tentativas repetidas da mesma edição reutilizam o rascunho e sua numeração. Situações fiscais incertas seguem as consultas/bloqueios existentes.
-- Configuração incluída no backup da empresa e identificada na prévia de restauração, com remapeamento correto ao restaurar em outra instalação.
-- Pendências com atalhos para o campo correspondente e produtos ordenados pelo histórico do cliente.
+- Corrige o erro Cannot read properties of null (reading checked) ao carregar o A1: o botão agora abre o formulário atual, com persistência marcada por padrão.
+- Unifica o formulário do certificado e captura arquivo, senha e preferência antes da leitura assíncrona. Fechamento da janela ou troca de empresa interrompem a operação antes do envio.
+- Certificado e senha são salvos no cofre DPAPI da conta do Windows, separados por empresa, e recarregados automaticamente nos próximos acessos/reinícios.
+- Mensagens distinguem gravação protegida e uso somente na sessão; senha do formulário é limpa após a operação.
 
-Primeiro configure e libere um modelo em Geral; depois escolha Simples como modo padrão. Os modelos atendem NF-e normal de saída dentro da cobertura atual. ST, bases/valores retidos específicos, grupos ou ajustes especiais e pagamentos que exijam detalhamento adicional continuam no modo completo. O modelo não deduz enquadramento fiscal nem habilita produção.
+Encerre o emissor antes de instalar manualmente. A atualização automática continua pelo atalho e pelo canal VF-Emissor. Cadastros, modelos, XML e cofres existentes são preservados. Depois de atualizar, carregue o A1 uma vez com a opção de salvar marcada. Em outro computador ou conta do Windows, carregue-o novamente.
 
-Encerre o programa antigo antes de instalar manualmente. O atalho configurado no canal VF-Emissor verifica esta atualização ao iniciar uma nova execução. Dados, certificados protegidos e XML permanecem no PC e separados por empresa. Google Drive continua sendo uma cópia adicional para pasta sincronizada.
-
-Cobertura fiscal preservada: AL/SVRS, A1, modelo 55, CRT 1/3 e 2026. Foram usados cadastros fictícios e certificado sintético nos testes; nenhuma nota real foi transmitida. Valide os cenários da empresa em homologação antes de usar produção.
+Testes usam certificados sintéticos. Nenhuma senha ou certificado real foi utilizado. Cobertura fiscal preservada: AL/SVRS, A1, modelo 55, CRT 1/3 e 2026.
