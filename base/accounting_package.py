@@ -24,6 +24,7 @@ def build(store,cid,period,env):
         for e in related:files['eventos/'+key+'-'+e['kind']+'-'+str(e['sequence'])+'-procEvento.xml']=e['proc_xml']
         rows.append(['Entrada emitida' if own_entry else 'Emitida',d['number'],d['series'],stamp,cancel_date,text(inf,'n:dest/n:xNome'),key,text(inf,'n:total/n:vNFTot') or text(inf,'n:total/n:ICMSTot/n:vNF'),d['status'],'Situação registrada pelo emissor'])
     for rid,d in store.list('received',cid):
+        if d.get('_archived'):continue
         if d.get('environment')!=env or not (d.get('issued_at','').startswith(period) or d.get('cancelled_at','').startswith(period)) or d.get('key') in seen:continue
         key=d.get('key','')
         if not re.fullmatch(r'\d{44}',key):continue

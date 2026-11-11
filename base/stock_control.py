@@ -37,7 +37,8 @@ def manual(store,cid,env,product,qty,reason):
 def mapping_id(cid,source,rid,line):return 'stockmap-'+identity(cid,source,rid,line)
 def set_mapping(store,cid,source,rid,line,product,factor):
     if source=='SAIDA':FiscalStore(store).get(cid,rid)
-    elif source=='ENTRADA':store.get('received',cid,rid)
+    elif source=='ENTRADA':
+        if store.get('received',cid,rid).get('_archived'):raise ValueError('Esta importação foi excluída.')
     else:raise ValueError('Origem inválida.')
     factor=clean_qty(factor)
     if factor<=0:raise ValueError('O fator de conversão deve ser positivo.')
@@ -67,7 +68,7 @@ def reconcile(store,cid):
         # Saídas emitidas reduzem estoque; entradas emitidas precisam de vínculo explícito.
         sources.append(dict(id=d['id'],source='SAIDA',env=d['environment'],number=str(d['number']),cancelled=d['status']=='CANCELADA',items=xml_items(d['proc_xml']),sign=1 if op=='0' else -1,incoming=False))
     for rid,doc in store.list('received',cid):
-        if doc.get('direction')!='recebida' or not doc.get('stock_enabled'):continue
+        if doc.get('_archived') or doc.get('direction')!='recebida' or not doc.get('stock_enabled'):continue
         sources.append(dict(id=rid,source='ENTRADA',env=doc['environment'],number=doc.get('number',''),cancelled=doc.get('cancelled',False),items=doc.get('items',[]),sign=int(doc.get('stock_sign',1)),incoming=True))
     for src in sources:
         for item in src['items']:
@@ -85,6 +86,26 @@ def reconcile(store,cid):
                 movement(store,cid,src['env'],link['product_id'],qty,src['source'],src['id'],line,'NF-e '+src['number']+' · '+item['unit']+' × '+link['factor'])
             except ValueError as e:pending.append(dict(source=src['source'],id=src['id'],environment=src['env'],number=src['number'],error=str(e),**item))
     return pending
+
+def remove_import(store,cid,rid,ack):
+    """Remove da rotina sem destruir o XML nem o histórico; estorno atômico."""
+    doc=store.get('received',cid,rid)
+    if ack!=doc.get('key'):raise ValueError('Confirme a exclusão desta nota importada.')
+    if doc.get('_archived'):return dict(ok=True,reversed=0)
+    if doc.get('environment')!=store.get('company','',cid).get('environment','2'):raise ValueError('A nota pertence a outro ambiente. Altere o ambiente e confira a nota.')
+    stamp=datetime.now().astimezone().isoformat();count=0
+    with store.db:
+        for _,m in store.list('stock_move',cid):
+            if m.get('source')!='ENTRADA' or m.get('source_id')!=rid or m.get('reverse'):continue
+            mid='stock-'+identity(cid,m['environment'],'ENTRADA',rid,m['line'],'reverse')
+            reverse=dict(m,quantity=str(-number(m['quantity'])),reverse=True,stamp=stamp,label='Estorno por exclusão da importação · NF-e '+doc.get('number',''))
+            changed=store.db.execute('INSERT OR IGNORE INTO records VALUES(?,?,?,?,?)',(mid,'stock_move',cid,json.dumps(reverse,ensure_ascii=False),stamp)).rowcount
+            if changed:
+                count+=1;store.db.execute('INSERT INTO audit(stamp,action,record) VALUES(?,?,?)',(stamp,'ESTORNAR IMPORTAÇÃO',mid))
+        doc.update(_archived=True,archived_at=stamp)
+        store.db.execute("UPDATE records SET data=?,updated=? WHERE kind='received' AND company=? AND id=?",(json.dumps(doc,ensure_ascii=False),stamp,cid,rid))
+        store.db.execute('INSERT INTO audit(stamp,action,record) VALUES(?,?,?)',(stamp,'EXCLUIR IMPORTAÇÃO',rid))
+    return dict(ok=True,reversed=count)
 
 def state(store,cid,env):
     pending=reconcile(store,cid);balances={};moves=[]

@@ -162,6 +162,9 @@ def restore(store,cid,token,ack):
                 elif kind in ('settings','business_settings','drive_status','backup_status','simple_config'):
                     rid={'settings':'preferences-','business_settings':'business-','drive_status':'drive-status-','backup_status':'backup-status-','simple_config':'simple-'}[kind]+cid
                 elif kind=='stock_move':rid='stock-'+identity(cid,d['environment'],d['source'],d['source_id'],d['line'],'reverse' if d.get('reverse') else 'original')
+                elif kind=='nature_config':
+                    from nature_catalog import marker_id
+                    rid=marker_id(cid)
                 elif kind=='stock_mapping' and source!=cid:
                     if not all(k in d for k in ('source','source_id','line')):continue
                     rid=mapping_id(cid,d['source'],d['source_id'],d['line'])

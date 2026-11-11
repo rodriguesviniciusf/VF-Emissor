@@ -96,6 +96,49 @@ class BusinessTests(unittest.TestCase):
  def test_stock_mapping_cannot_reference_another_company_product(self):
   self.stock_on(self.other)
   with self.assertRaises(ValueError):stock_control.manual(self.store,self.other,'2',self.product,'1','Ajuste de teste')
+ def incoming_for_deletion(self,mapped=True):
+  self.f.recipient['CNPJCPF']='12345678000195';did=self.authorized();raw=self.fiscal.get(self.cid,did)['proc_xml'];self.stock_on(self.other)
+  target=self.store.save('product',dict(code='EST001',name='Caixa convertida',NCM='03061710',unit='UN',price='1'),self.other)
+  p=self.api('entry_preview',cid=self.other,data=base64.b64encode(raw).decode());result=self.api('entry_apply',cid=self.other,token=p['token'],move_stock=True,mappings=[dict(line=1,product_id=target,factor='12')] if mapped else [])
+  return did,result['id'],raw,target
+ def test_delete_import_reverses_once_preserves_xml_and_fiscal_documents(self):
+  did,rid,raw,target=self.incoming_for_deletion();self.assertEqual(self.balance(self.other),24);doc=self.store.get('received',self.other,rid)
+  self.assertEqual(self.api('entry_delete',cid=self.other,id=rid,ack=doc['key'])['reversed'],1);self.assertEqual(self.balance(self.other),0)
+  self.assertEqual(self.api('entry_delete',cid=self.other,id=rid,ack=doc['key'])['reversed'],0);self.assertEqual(len(self.store.list('stock_move',self.other)),2)
+  self.assertEqual((self.root/'xml-importados'/self.other/(rid+'.xml')).read_bytes(),raw);self.assertEqual(self.fiscal.get(self.cid,did)['status'],'AUTORIZADA');self.assertFalse(server.rows('received',self.other))
+  package,_=accounting_package.build(self.store,self.other,'2026-11','2')
+  with zipfile.ZipFile(io.BytesIO(package)) as z:self.assertFalse(any(n.endswith('procNFe.xml') for n in z.namelist()))
+ def test_delete_import_rejects_wrong_company_ack_and_environment(self):
+  _,rid,_,_=self.incoming_for_deletion();key=self.store.get('received',self.other,rid)['key']
+  for kwargs in (dict(cid=self.cid,ack=key),dict(cid=self.other,ack='ERRADO')):
+   with self.assertRaises(ValueError):self.api('entry_delete',id=rid,**kwargs)
+  co=self.store.get('company','',self.other);co['environment']='1';self.store.save('company',co,'',self.other)
+  with self.assertRaises(ValueError):self.api('entry_delete',cid=self.other,id=rid,ack=key)
+  self.assertFalse(self.store.get('received',self.other,rid).get('_archived'))
+ def test_delete_pending_import_removes_stock_pending_without_inventing_movement(self):
+  _,rid,_,target=self.incoming_for_deletion(False);self.assertTrue(stock_control.state(self.store,self.other,'2')['pending']);key=self.store.get('received',self.other,rid)['key']
+  self.api('entry_delete',cid=self.other,id=rid,ack=key);self.assertFalse(stock_control.state(self.store,self.other,'2')['pending']);self.assertFalse(self.store.list('stock_move',self.other))
+  with self.assertRaises(ValueError):stock_control.set_mapping(self.store,self.other,'ENTRADA',rid,1,target,'1')
+ def test_delete_cancelled_import_does_not_reverse_twice_even_with_stock_off(self):
+  _,rid,_,_=self.incoming_for_deletion();self.assertEqual(self.balance(self.other),24);doc=self.store.get('received',self.other,rid);doc['cancelled']=True;self.store.save('received',doc,self.other,rid);self.assertEqual(self.balance(self.other),0)
+  business_config.save(self.store,self.other,dict(stock_enabled='0'));self.api('entry_delete',cid=self.other,id=rid,ack=doc['key']);self.assertEqual(self.balance(self.other),0);self.assertEqual(len(self.store.list('stock_move',self.other)),2)
+ def test_reimport_after_delete_can_move_stock_again_without_duplicate_old_movement(self):
+  _,rid,raw,target=self.incoming_for_deletion();self.assertEqual(self.balance(self.other),24);key=self.store.get('received',self.other,rid)['key'];self.api('entry_delete',cid=self.other,id=rid,ack=key)
+  plan=self.api('entry_preview',cid=self.other,data=base64.b64encode(raw).decode());result=self.api('entry_apply',cid=self.other,token=plan['token'],move_stock=True,mappings=[dict(line=1,product_id=target,factor='12')])
+  self.assertNotEqual(result['id'],rid);self.assertEqual(self.balance(self.other),24);self.assertEqual(len(server.rows('received',self.other)),1)
+ def test_delete_import_transaction_rolls_back_reversal_if_archive_fails(self):
+  _,rid,_,_=self.incoming_for_deletion();self.assertEqual(self.balance(self.other),24);doc=self.store.get('received',self.other,rid)
+  self.store.db.execute("CREATE TEMP TRIGGER fail_archive BEFORE UPDATE ON records WHEN NEW.kind='received' BEGIN SELECT RAISE(ABORT,'falha simulada'); END")
+  with self.assertRaises(ValueError):self.api('entry_delete',cid=self.other,id=rid,ack=doc['key'])
+  self.assertEqual(self.balance(self.other),24);self.assertFalse(self.store.get('received',self.other,rid).get('_archived'));self.assertEqual(len(self.store.list('stock_move',self.other)),1)
+ def test_natures_backup_to_new_company_id_keeps_deletions(self):
+  import nature_catalog
+  removed=nature_catalog.listing(self.store,self.cid)[0];nature_catalog.remove(self.store,self.cid,removed['id']);backup=company_recovery.create(self.store,self.cid)
+  target=core.Store(self.root/'new-install/vf.sqlite3');FiscalStore(target);EventStore(target)
+  try:
+   cid=target.save('company',self.f.company);raw=Path(backup['path']).read_bytes();token=company_recovery.upload_start(target,cid,len(raw));company_recovery.upload_chunk(target,cid,token,0,raw);company_recovery.inspect(target,cid,token);company_recovery.restore(target,cid,token,'RESTAURAR 11222333000181')
+   self.assertNotIn(removed['name'],nature_catalog.nature_choices(target,cid))
+  finally:target.db.close()
  def test_backup_is_filtered_and_manifest_verified(self):
   r=company_recovery.create(self.store,self.cid);raw=Path(r['path']).read_bytes();token=self.upload(raw);p=company_recovery.inspect(self.store,self.cid,token)
   self.assertEqual(p['cnpj'],'11222333000181');self.assertEqual(p['counts']['company'],1)

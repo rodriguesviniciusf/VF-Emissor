@@ -70,6 +70,9 @@ def _action(store,p,preview,base_import):
     cmd=p['action'];cid=p.get('cid','')
     if cmd=='save_features':
         result=business_config.save(store,cid,p['data']);after_change(store,cid);return dict(features=result)
+    if cmd=='entry_delete':
+        result=stock_control.remove_import(store,cid,p['id'],p.get('ack'))
+        after_change(store,cid);return result
     if cmd=='import_catalog_preview':
         raw=base64.b64decode(p['data'],validate=True);kind=p['kind'];rows=catalog_wizard.preview(store,cid,kind,raw,p['filename'],p.get('party',''))
         token=remember(cid,'catalog',dict(kind=kind,rows=rows));return dict(token=token,rows=rows)
@@ -81,9 +84,9 @@ def _action(store,p,preview,base_import):
         raw=base64.b64decode(p['data'],validate=True)
         if len(raw)>8*1024*1024:raise ValueError('XML acima de 8 MB.')
         co=store.get('company','',cid);meta=read_entry(raw,co)
-        if meta['kind']=='cancel' and not any(d.get('key')==meta['key'] and d.get('environment')==meta['environment'] for _,d in store.list('received',cid)):raise ValueError('Importe primeiro a NF-e relacionada a este cancelamento.')
+        if meta['kind']=='cancel' and not any(not d.get('_archived') and d.get('key')==meta['key'] and d.get('environment')==meta['environment'] for _,d in store.list('received',cid)):raise ValueError('Importe primeiro a NF-e relacionada a este cancelamento.')
         if meta['kind']=='invoice':
-            old=next(((rid,r) for rid,r in store.list('received',cid) if r.get('key')==meta['key']),None)
+            old=next(((rid,r) for rid,r in store.list('received',cid) if not r.get('_archived') and r.get('key')==meta['key']),None)
             meta['repair']=bool(old and not (store.path.parent/'xml-importados'/cid/(old[0]+'.xml')).exists())
         return dict(token=remember(cid,'entry',dict(raw=raw,meta=meta)),**meta)
     if cmd=='entry_apply':
@@ -92,7 +95,9 @@ def _action(store,p,preview,base_import):
         raw=plan['data']['raw'];meta=plan['data']['meta'];co=store.get('company','',cid)
         read_entry(raw,co)
         if meta['kind']=='cancel':
-            rid,rec=next((rid,r) for rid,r in store.list('received',cid) if r.get('key')==meta['key'] and r.get('environment')==meta['environment'])
+            existing=next(((rid,r) for rid,r in store.list('received',cid) if not r.get('_archived') and r.get('key')==meta['key'] and r.get('environment')==meta['environment']),None)
+            if not existing:raise ValueError('A importação relacionada foi excluída. Confira novamente o XML.')
+            rid,rec=existing
             file=rid+'-cancel-'+hashlib.sha256(raw).hexdigest()[:16]+'.xml';atomic_write(store.path.parent/'xml-importados'/cid/file,raw,True)
             rec.update(cancelled=True,cancelled_at=meta['cancelled_at'],cancellation_files=list(dict.fromkeys(rec.get('cancellation_files',[])+[file])));store.save('received',rec,cid,rid)
             result=dict(id=rid,message='Cancelamento declarado no arquivo importado. O estoque será estornado quando houver movimento vinculado.')
@@ -153,7 +158,7 @@ def action(store,p,preview,base_import):
     try:return _action(store,p,preview,base_import)
     except (zipfile.BadZipFile,sqlite3.DatabaseError,XMLSyntaxError) as exc:raise ValueError('O arquivo não pôde ser lido ou está danificado. Confira o formato e selecione novamente.') from exc
 
-COMMANDS={'save_features','import_catalog_preview','import_catalog_apply','entry_preview','entry_apply','stock_adjust','stock_map','backup_now','backup_list','restore_saved_preview','restore_upload_start','restore_upload_chunk','restore_preview','restore_apply','drive_sync','correction_draft','clone_latest'}
+COMMANDS={'entry_delete','save_features','import_catalog_preview','import_catalog_apply','entry_preview','entry_apply','stock_adjust','stock_map','backup_now','backup_list','restore_saved_preview','restore_upload_start','restore_upload_chunk','restore_preview','restore_apply','drive_sync','correction_draft','clone_latest'}
 
 def start_maintenance(data_dir,stop):
     def run():
@@ -162,6 +167,8 @@ def start_maintenance(data_dir,stop):
             store=None
             try:
                 store=Store(Path(data_dir)/'vf.sqlite3');FiscalStore(store);EventStore(store)
+                import ncm_catalog
+                ncm_catalog.refresh(data_dir)
                 for cid,co in store.list('company'):
                     if stop.is_set():break
                     try:

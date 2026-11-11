@@ -30,6 +30,8 @@ jobs:
           if ($LASTEXITCODE) { throw 'Testes web/desktop falharam.' }
           node --check .\static\assistance-ui.js
           if ($LASTEXITCODE) { throw 'JavaScript de assistência inválido.' }
+          node --check .\static\ncm-ui.js
+          if ($LASTEXITCODE) { throw 'JavaScript NCM invalido.' }
           node --check .\static\simple-ui.js
           if ($LASTEXITCODE) { throw 'JavaScript do Modo Simples inválido.' }
           node --test .\tests\certificate-ui.test.cjs

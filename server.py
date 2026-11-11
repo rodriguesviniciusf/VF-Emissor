@@ -16,6 +16,7 @@ from note_validation import validate_note
 from vf_workflow import next_number, duplicate, preview_html
 import editor_recovery
 import simple_mode
+import ncm_catalog,nature_catalog
 
 VERSION = json.loads((ROOT/'version.json').read_text(encoding='utf-8'))['version']
 RUN_TOKEN = secrets.token_urlsafe(32)
@@ -112,6 +113,8 @@ def checked_snapshot(cid, n):
     snap = snapshot(cid, n)
     issues = validate_note(snap['company'], snap['recipient'], n)
     if issues: raise ValueError('\n'.join(i.message for i in issues[:20]))
+    ncm=ncm_catalog.check_note(STORE.path.parent,n)
+    if ncm['issues']:raise ValueError('\n'.join(i['message'] for i in ncm['issues'][:20]))
     return snap
 
 def editable(cid, rid):
@@ -157,6 +160,7 @@ def get_state(cid=''):
         certificate_saved=vault().exists(cid),certificate_error=VAULT_ERRORS.get(cid,''),
         editing_drafts=editor_recovery.list_copies(STORE,cid,co.get('environment','2')),
         simple_config=simple_mode.public_state(STORE,cid),
+        natures=nature_catalog.listing(STORE,cid),ncm_status=ncm_catalog.local(STORE.path.parent).status(),
         storage=dict(data_dir=str(STORE.path.parent),xml_dir=str(STORE.path.parent/'notas-fiscais'/co['CNPJCPF'])),
         updates=dict(repository=updater().configuration().get('repository',''),automatic=True,status=updater().status()))
 
@@ -288,14 +292,26 @@ def import_xml(p):
 
 def action(p):
     cmd = p['action']; cid = p.get('cid', '')
+    if cmd in ('nature_save','nature_delete'):
+        company(cid)
+        from business_runtime import LOCK
+        with LOCK:
+            if cmd=='nature_save':return dict(id=nature_catalog.save_nature(STORE,cid,p['name'],p.get('id') or None))
+            return nature_catalog.remove(STORE,cid,p['id'])
+    if cmd in ('ncm_lookup','ncm_search','ncm_refresh'):
+        company(cid)
+        if cmd=='ncm_refresh':return ncm_catalog.refresh(STORE.path.parent,force=True)
+        catalog=ncm_catalog.local(STORE.path.parent)
+        if cmd=='ncm_search':return dict(results=catalog.search(p.get('query','')),table=catalog.status())
+        return catalog.lookup(p.get('code',''),p.get('issued_on'))
     if cmd in ('simple_config_save','simple_resolve','simple_review'):
         company(cid)
         from business_runtime import LOCK
         with LOCK:
             if cmd=='simple_config_save':return dict(config=simple_mode.save(STORE,cid,p))
             if cmd=='simple_resolve':return dict(note=simple_mode.resolve(STORE,cid,p))
-            n=p['note'];issues=action(dict(action='validate',cid=cid,note=n))['issues'];values,errors=totals(company(cid),n)
-            return dict(issues=issues,totals=values,errors=errors,review_hash=simple_mode.review_hash(n) if not issues and not errors else '')
+            n=p['note'];validation=action(dict(action='validate',cid=cid,note=n));issues=validation['issues'];values,errors=totals(company(cid),n)
+            return dict(issues=issues,warnings=validation.get('warnings',[]),totals=values,errors=errors,review_hash=simple_mode.review_hash(n) if not issues and not errors else '')
     if cmd=='lookup_public':
         from public_lookup import lookup
         return lookup(p['kind'],p.get('value',''),cid or 'registration')
@@ -389,7 +405,8 @@ def action(p):
         try: rec = STORE.get('recipient', cid, n.get('recipient_id', ''))
         except ValueError: rec = {}
         issues = validate_note(co, rec, n)
-        return dict(issues=simple_mode.verify(STORE,cid,p['note'])+[dict(field=i.field, message=i.message) for i in issues])
+        ncm=ncm_catalog.check_note(STORE.path.parent,n)
+        return dict(issues=simple_mode.verify(STORE,cid,p['note'])+[dict(field=i.field, message=i.message) for i in issues]+ncm['issues'],warnings=ncm['warnings'])
     if cmd == 'load_certificate':
         if PREVIEW: raise ValueError('Carregue seu certificado somente no aplicativo local do Windows.')
         raw = base64.b64decode(p['data'], validate=True)
@@ -421,6 +438,8 @@ def action(p):
         if cmd == 'send':
             d = fs.get(cid, p['id'])
             if p.get('ack_key') != d['access_key']: raise ValueError('Revise e confirme a chave e o resumo antes de transmitir.')
+            ncm=ncm_catalog.check_note(STORE.path.parent,json.loads(d['snapshot'])['note'])
+            if ncm['issues'] and d['status']=='PREPARADA':raise ValueError(ncm['issues'][0]['message'])
             result=svc.send(cid,p['id']);__import__('business_runtime').after_change(STORE,cid);return dict(status=result)
         es = EventService(EventStore(STORE), cert)
         if cmd == 'event_query':
@@ -481,7 +500,7 @@ class Handler(BaseHTTPRequestHandler):
         u = urlparse(self.path); q = parse_qs(u.query)
         try:
             if u.path=='/municipios.json':return self.reply((ROOT/'base/assets/municipios.json').read_bytes())
-            if u.path in ('/', '/simple-ui.js', '/simple.css', '/assistance-ui.js', '/assistance.css', '/app.js', '/normal-ui.js', '/product-ui.js', '/settings-ui.js', '/desktop-ui.js', '/workspace-ui.js', '/workspace.css', '/business-ui.js', '/business.css', '/style.css', '/favicon.svg'):
+            if u.path in ('/', '/ncm-ui.js', '/ncm.css', '/simple-ui.js', '/simple.css', '/assistance-ui.js', '/assistance.css', '/app.js', '/normal-ui.js', '/product-ui.js', '/settings-ui.js', '/desktop-ui.js', '/workspace-ui.js', '/workspace.css', '/business-ui.js', '/business.css', '/style.css', '/favicon.svg'):
                 f = ROOT/'static'/('index.html' if u.path=='/' else u.path[1:])
                 return self.reply(f.read_bytes(), mimetypes.guess_type(f)[0] or 'text/plain', session=u.path=='/')
             if u.path == '/health': return self.reply(dict(app='VF Emissor Web', version=VERSION))

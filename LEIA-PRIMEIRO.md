@@ -1,9 +1,9 @@
-# VF Emissor 0.16.3 — Windows
+# VF Emissor 0.17.0 — Windows
 
 ## Instalar e abrir
 
 1. Encerre a versão antiga do emissor.
-2. Execute **VF-Emissor-Setup-0.16.3.exe** e conclua a instalação. Requer Windows 10/11 de 64 bits.
+2. Execute **VF-Emissor-Setup-0.17.0.exe** e conclua a instalação. Requer Windows 10/11 de 64 bits.
 3. Abra o atalho **VF Emissor** criado na área de trabalho ou no menu Iniciar.
 4. Se você já usava a versão anterior, antes de cadastrar empresas clique em **Já usava o emissor? Importar meus dados** e informe o caminho da pasta antiga do emissor ou sua pasta `dados`. A origem não será apagada.
 5. Entre com o CNPJ e a senha da empresa que já utilizava. Não é necessário refazer os cadastros após a importação.
@@ -110,7 +110,7 @@ Certificado A1, estoque e cópia adicional para o Google Drive estão na aba **G
 A tela inicial mostra cópias recuperáveis, certificado próximo do vencimento, backup atrasado/pendente e cópias de XML pendentes para o Drive. Os atalhos abrem a seção correspondente. Nenhum alerta de Drive representa confirmação de envio à nuvem: o emissor confirma a cópia local; o aplicativo Google Drive realiza a sincronização.
 
 
-## Modo Simples — 0.16.3
+## Modo Simples — 0.17.0
 
 Abra **Configurações → Geral → Modo Simples → Configurar Modo Simples**. Use **Criar modelo**, informe nome, natureza, UF do cliente, indicador de IE, consumidor final, presença, pagamento e transporte. Escolha se cada produto usa seu perfil tributário ou se o modelo aplica um perfil definido. O perfil deve estar revisado e ser compatível com a UF, o regime e a operação. Marque produtos somente se quiser restringir a seleção; nenhum marcado oferece os produtos compatíveis do cadastro.
 
@@ -121,3 +121,11 @@ Ao abrir **Nova NF-e**, escolha o cliente, adicione produtos e ajuste quantidade
 **Guardar e voltar** mantém as cópias confirmadas da edição. Ao recuperar, confira novamente a nota. **Salvar rascunho** grava uma nota local sem transmitir. **Abrir modo completo** preserva os dados e a identidade do rascunho. Modelos alterados ou cadastros/perfis modificados exigem revalidação; o botão **Revalidar modelo e itens** reaplica os parâmetros atuais após confirmação. Se preço estiver bloqueado no modelo, essa revisão usa o preço atual do cadastro.
 
 Esta entrega simplifica NF-e normal de saída com pagamento em dinheiro, cheque, boleto, depósito, PIX ou transferência. Operações especiais, ST, bases/valores retidos específicos, quantidades tributáveis ou créditos/ajustes particulares e pagamentos que exijam grupos adicionais devem ser conferidos no modo completo. A tributação nunca é inferida apenas pelo nome do modelo. O conector, as exigências e as limitações fiscais do motor continuam descritos em **COBERTURA.md**.
+
+## NCM, naturezas e notas importadas — 0.17.0
+
+Digite os oito dígitos do NCM no cadastro de produto ou no item da nota para conferir descrição, grupo e datas da tabela oficial. Também pode pesquisar código ou descrição e escolher o resultado. A descrição comercial do produto e os impostos não são alterados pela consulta. Confira a data da tabela: sem internet, a cópia local funciona, mas a vigência atual pode ficar sem confirmação. Use **Atualizar tabela oficial** para tentar novamente. A fonte da Receita contém somente os códigos vigentes na data de referência, sem histórico completo de extintos/futuros.
+
+Em **Configurações > Fiscal > Naturezas de operação desta empresa**, adicione ou exclua opções. As descrições são sugeridas nos campos de natureza da NF-e, dos padrões fiscais e do Modo Simples. Excluir não altera o texto de notas/modelos já existentes. CFOP e tributos devem ser configurados separadamente.
+
+Na guia **NF-e fornecedor/Recebidas**, clique em **Excluir importação** e confira a confirmação. A importação sai da lista e dos próximos pacotes contábeis. Movimentos vinculados de estoque são estornados sem duplicidade; o XML e os eventos continuam no arquivo local e nos backups. A operação não cancela NF-e na SEFAZ. Para registrá-la novamente, importe o XML preservado.

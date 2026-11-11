@@ -27,6 +27,7 @@ def copy_xml(store,cid):
                 files.append((folder/(e['id']+'-procEvento.xml'),e['proc_xml']))
     if cfg['drive_entries']=='1':
         for rid,d in store.list('received',cid):
+            if d.get('_archived'):continue
             path=store.path.parent/'xml-importados'/cid/(rid+'.xml')
             if d.get('direction')=='recebida' and path.is_file() and not path.is_symlink():files.append((Path(cnpj)/('producao' if d['environment']=='1' else 'homologacao')/d['issued_at'][:7]/'entradas'/(d['key']+'-procNFe.xml'),path.read_bytes()))
     copied=0;pending=0

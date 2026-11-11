@@ -29,4 +29,10 @@ try {
   if ($Simple.Content -notmatch 'function renderSimple') { throw 'Modo Simples ausente na instalacao.' }
   $SimpleStyle = Invoke-WebRequest http://127.0.0.1:8788/simple.css
   if ($SimpleStyle.StatusCode -ne 200) { throw 'Visual do Modo Simples ausente.' }
+  $Ncm = Invoke-WebRequest http://127.0.0.1:8788/ncm-ui.js
+  if ($Ncm.Content -notmatch 'function attachNcmFields') { throw 'Consulta NCM ausente na instalacao.' }
+  $NcmStyle = Invoke-WebRequest http://127.0.0.1:8788/ncm.css
+  if ($NcmStyle.StatusCode -ne 200) { throw 'Visual NCM ausente.' }
+  & (Join-Path $Install 'portable\python.exe') -c "import sys;sys.path.insert(0,r'$Install\base');import ncm_catalog as n;c=n.local(r'$TestData');assert len(c.leaves)>10000;assert c.lookup('03061710')['description']=='Inteiros';print('NCM offline no instalador OK')"
+  if ($LASTEXITCODE) { throw 'Catalogo NCM offline ausente ou incompleto no instalador.' }
 } finally { Stop-Process -Id $Process.Id -ErrorAction SilentlyContinue }
