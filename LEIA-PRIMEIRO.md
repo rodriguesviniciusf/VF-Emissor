@@ -1,9 +1,9 @@
-# VF Emissor 0.15.0 — Windows
+# VF Emissor 0.16.0 — Windows
 
 ## Instalar e abrir
 
 1. Encerre a versão antiga do emissor.
-2. Execute **VF-Emissor-Setup-0.15.0.exe** e conclua a instalação. Requer Windows 10/11 de 64 bits.
+2. Execute **VF-Emissor-Setup-0.16.0.exe** e conclua a instalação. Requer Windows 10/11 de 64 bits.
 3. Abra o atalho **VF Emissor** criado na área de trabalho ou no menu Iniciar.
 4. Se você já usava a versão anterior, antes de cadastrar empresas clique em **Já usava o emissor? Importar meus dados** e informe o caminho da pasta antiga do emissor ou sua pasta `dados`. A origem não será apagada.
 5. Entre com o CNPJ e a senha da empresa que já utilizava. Não é necessário refazer os cadastros após a importação.
@@ -108,3 +108,16 @@ Na tela inicial, use **Recuperar rascunhos** para conferir as cópias da empresa
 Certificado A1, estoque e cópia adicional para o Google Drive estão na aba **Geral**. As abas separadas de Certificado e Estoque/Google Drive foram removidas. Cada grupo mantém seu botão de salvar e continua vinculado à empresa ativa.
 
 A tela inicial mostra cópias recuperáveis, certificado próximo do vencimento, backup atrasado/pendente e cópias de XML pendentes para o Drive. Os atalhos abrem a seção correspondente. Nenhum alerta de Drive representa confirmação de envio à nuvem: o emissor confirma a cópia local; o aplicativo Google Drive realiza a sincronização.
+
+
+## Modo Simples — 0.16.0
+
+Abra **Configurações → Geral → Modo Simples → Configurar Modo Simples**. Use **Criar modelo**, informe nome, natureza, UF do cliente, indicador de IE, consumidor final, presença, pagamento e transporte. Escolha se cada produto usa seu perfil tributário ou se o modelo aplica um perfil definido. O perfil deve estar revisado e ser compatível com a UF, o regime e a operação. Marque produtos somente se quiser restringir a seleção; nenhum marcado oferece os produtos compatíveis do cadastro.
+
+Defina as permissões de preço, desconto e pagamento. Confira os parâmetros e marque a confirmação antes de escolher **Liberado para emitir**. Na tela de configuração, selecione **Simples** como modo de emissão padrão, escolha o modelo preferido e clique em **Salvar preferência**. Cada empresa mantém sua própria escolha. Não foi criada uma aba adicional nas configurações.
+
+Ao abrir **Nova NF-e**, escolha o cliente, adicione produtos e ajuste quantidades. O pagamento padrão e a modalidade de transporte ficam visíveis; fatura, parcelas e dados da transportadora estão em seções próprias. Clique em **Conferir nota**, leia o resumo e confirme com **Emitir NF-e**. Esse último botão prepara e transmite, sem repetir uma segunda confirmação equivalente. Só o retorno da SEFAZ indica autorização. Sem A1 utilizável, a preparação é bloqueada e o rascunho permanece salvo.
+
+**Guardar e voltar** mantém as cópias confirmadas da edição. Ao recuperar, confira novamente a nota. **Salvar rascunho** grava uma nota local sem transmitir. **Abrir modo completo** preserva os dados e a identidade do rascunho. Modelos alterados ou cadastros/perfis modificados exigem revalidação; o botão **Revalidar modelo e itens** reaplica os parâmetros atuais após confirmação. Se preço estiver bloqueado no modelo, essa revisão usa o preço atual do cadastro.
+
+Esta entrega simplifica NF-e normal de saída com pagamento em dinheiro, cheque, boleto, depósito, PIX ou transferência. Operações especiais, ST, bases/valores retidos específicos, quantidades tributáveis ou créditos/ajustes particulares e pagamentos que exijam grupos adicionais devem ser conferidos no modo completo. A tributação nunca é inferida apenas pelo nome do modelo. O conector, as exigências e as limitações fiscais do motor continuam descritos em **COBERTURA.md**.

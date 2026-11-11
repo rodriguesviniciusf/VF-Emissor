@@ -30,6 +30,8 @@ jobs:
           if ($LASTEXITCODE) { throw 'Testes web/desktop falharam.' }
           node --check .\static\assistance-ui.js
           if ($LASTEXITCODE) { throw 'JavaScript de assistência inválido.' }
+          node --check .\static\simple-ui.js
+          if ($LASTEXITCODE) { throw 'JavaScript do Modo Simples inválido.' }
       - name: Conferir disponibilidade das consultas públicas
         shell: pwsh
         run: .\portable\python.exe .\scripts\check_public_lookups.py

@@ -27,3 +27,16 @@ Ao enviar uma nova versão em `version.json` à branch `main`, o workflow inicia
 Requer Python 3.12 no Windows. Execute `python scripts/bootstrap_windows.py` para preparar o runtime e depois `portable\python.exe -m unittest discover -s tests`. Para uso portátil, execute `INICIAR-WINDOWS.bat`.
 
 O programa mantém o arquivo fiscal original no PC. A opção Google Drive faz somente uma cópia adicional para uma pasta sincronizada configurada pelo usuário.
+
+
+## Modo Simples — 0.16.0
+
+Abra **Configurações → Geral → Modo Simples → Configurar Modo Simples**. Use **Criar modelo**, informe nome, natureza, UF do cliente, indicador de IE, consumidor final, presença, pagamento e transporte. Escolha se cada produto usa seu perfil tributário ou se o modelo aplica um perfil definido. O perfil deve estar revisado e ser compatível com a UF, o regime e a operação. Marque produtos somente se quiser restringir a seleção; nenhum marcado oferece os produtos compatíveis do cadastro.
+
+Defina as permissões de preço, desconto e pagamento. Confira os parâmetros e marque a confirmação antes de escolher **Liberado para emitir**. Na tela de configuração, selecione **Simples** como modo de emissão padrão, escolha o modelo preferido e clique em **Salvar preferência**. Cada empresa mantém sua própria escolha. Não foi criada uma aba adicional nas configurações.
+
+Ao abrir **Nova NF-e**, escolha o cliente, adicione produtos e ajuste quantidades. O pagamento padrão e a modalidade de transporte ficam visíveis; fatura, parcelas e dados da transportadora estão em seções próprias. Clique em **Conferir nota**, leia o resumo e confirme com **Emitir NF-e**. Esse último botão prepara e transmite, sem repetir uma segunda confirmação equivalente. Só o retorno da SEFAZ indica autorização. Sem A1 utilizável, a preparação é bloqueada e o rascunho permanece salvo.
+
+**Guardar e voltar** mantém as cópias confirmadas da edição. Ao recuperar, confira novamente a nota. **Salvar rascunho** grava uma nota local sem transmitir. **Abrir modo completo** preserva os dados e a identidade do rascunho. Modelos alterados ou cadastros/perfis modificados exigem revalidação; o botão **Revalidar modelo e itens** reaplica os parâmetros atuais após confirmação. Se preço estiver bloqueado no modelo, essa revisão usa o preço atual do cadastro.
+
+Esta entrega simplifica NF-e normal de saída com pagamento em dinheiro, cheque, boleto, depósito, PIX ou transferência. Operações especiais, ST, bases/valores retidos específicos, quantidades tributáveis ou créditos/ajustes particulares e pagamentos que exijam grupos adicionais devem ser conferidos no modo completo. A tributação nunca é inferida apenas pelo nome do modelo. O conector, as exigências e as limitações fiscais do motor continuam descritos em **COBERTURA.md**.

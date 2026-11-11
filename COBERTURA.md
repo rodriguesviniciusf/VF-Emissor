@@ -51,3 +51,8 @@ A restauração cria cópia anterior e desabilita produção para revisão de nu
 - Configurações: certificado, estoque e Drive dentro de Geral. Avisos na tela inicial levam às seções correspondentes.
 - O contexto da empresa acompanha as requisições do aplicativo para impedir gravação de uma aba antiga após troca de empresa em outro acesso.
 - Cobertura fiscal permanece AL/SVRS, modelo 55, A1, CRT 1/3 e 2026. Nenhuma emissão real com A1 foi feita nesta atualização.
+
+
+## Modo Simples 0.16.0
+
+Interface opcional para NF-e normal de saída, sem alteração do motor fiscal ou ampliação de conector. Modelos revisados são separados por empresa, UF de destino e indicador de IE. Os perfis precisam estar revisados, corresponder ao regime e usar CFOP compatível com o destino. Preenchimento usa o mesmo calculate, validate_note, assinatura A1 e serviços fiscais do modo completo. Grupos especiais, ST e valores retidos específicos, quantidades tributáveis ou créditos/ajustes que não podem ser reaproveitados como parâmetros fixos exigem o modo completo. Modelos não definem a tributação automaticamente nem habilitam produção.

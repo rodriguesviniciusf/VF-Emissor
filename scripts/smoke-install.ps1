@@ -25,4 +25,8 @@ try {
   if ($Cities.municipalities.Count -lt 5571) { throw 'Catalogo offline incompleto no instalador.' }
   $Assistance = Invoke-WebRequest http://127.0.0.1:8788/assistance-ui.js
   if ($Assistance.Content -notmatch 'function editorPayload') { throw 'Interface de recuperacao ausente na instalacao.' }
+  $Simple = Invoke-WebRequest http://127.0.0.1:8788/simple-ui.js
+  if ($Simple.Content -notmatch 'function renderSimple') { throw 'Modo Simples ausente na instalacao.' }
+  $SimpleStyle = Invoke-WebRequest http://127.0.0.1:8788/simple.css
+  if ($SimpleStyle.StatusCode -ne 200) { throw 'Visual do Modo Simples ausente.' }
 } finally { Stop-Process -Id $Process.Id -ErrorAction SilentlyContinue }

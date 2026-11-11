@@ -1,28 +1,23 @@
-# Validação 0.15.0
+# Validação 0.16.0
 
 ## Verificações locais
 
 - Motor fiscal/eventos: 118 testes aprovados.
-- Web, desktop e rotinas: 164 testes encontrados; 163 aprovados e 1 teste de DPAPI nativa não se aplica ao Linux.
-- Total local: 281 aprovados e 1 teste exclusivo de Windows a executar no fluxo nativo.
-- JavaScript verificado com node --check, módulos Python compilados e git diff --check.
+- Web/desktop: 194 testes encontrados, 193 aprovados e 1 teste nativo de DPAPI inaplicável ao Linux.
+- Total local: 311 aprovados e 1 teste exclusivo do Windows não executado no Linux.
+- Os 30 testes do Modo Simples cobrem configuração por empresa, persistência/backup, liberação explícita, concorrência de configurações, contexto de UF/IE/regime, perfis e alterações, preços/descontos/pagamentos, produtos permitidos, igualdade de cálculo e XML nos CRT 1/3, confirmação do resumo, preparação/assinatura e envio simulado pelo fluxo atual, idempotência de rascunho e preparação, estados fiscais incertos, recuperação, passagem ao modo completo, ambiente, autenticação/CSRF e aba de empresa desatualizada.
+- JavaScript, compilação Python e git diff --check verificados.
 
-Os 31 testes novos cobrem municípios e cidades homônimas, validação/formatação de CEP/CNPJ, campos permitidos, preservação de IE/regime, falhas de rede/limites/respostas, cache separado por contexto, cópias sem numeração ou XML, sobrevivência ao reabrir banco, empresa/ambiente, gravações concorrentes e repetição idempotente, produto incompleto, notas alteradas/finalizadas, renovação de revisões, tamanho, descarte versionado, backup filtrado, consulta antes do primeiro cadastro com CSRF e bloqueio de contexto após troca de empresa em outra aba.
+## Interface
 
-## Interface e consultas reais
+Usada somente empresa fictícia de regime normal em homologação. Pela interface foram criados e liberados o modelo Venda rápida • Alagoas e a preferência de abertura Simples. Nova NF-e abriu o fluxo Cliente → Produtos → Conferir e emitir. Pasta organizadora, quantidade 3, preço 12,50 e desconto 1,50 resultaram em 36,00, com atualização durante a digitação e conferência aprovada.
 
-Com empresa fictícia: Arapiraca/AL preencheu IBGE 2700300. A consulta real ao CEP público de demonstração 01001000 mostrou Praça da Sé, São Paulo/SP, IBGE 3550308. Foi aplicado endereço/município preservando o número 999 e ignorando o bairro desmarcado. A consulta real ao CNPJ público de demonstração da própria documentação da BrasilAPI mostrou razão social, endereço, situação e CNAE. A prévia foi aplicada mantendo o número já digitado e sem preencher IE ou regime.
+Após guardar, reabrir a página e recuperar a edição, modelo, cliente, quantidade, desconto e observações foram preservados, exigindo nova conferência. A tentativa sem certificado foi bloqueada antes de gerar documento fiscal; ficou um único rascunho. A passagem ao modo completo preservou os dados e salvou a mesma nota. Nenhum A1 real nem transmissão real foi usado.
 
-Uma nova edição com texto e produto incompleto foi copiada automaticamente. Após reiniciar o serviço e abrir outra página, ambos foram recuperados; quantidade 3 e preço 12,50 resultaram em 37,50 na conferência. A gravação manual criou somente o rascunho esperado e removeu a cópia correspondente; o catálogo de produtos não foi alterado e nenhum XML foi preparado.
+## Windows
 
-Conferidas seis abas nas configurações. Geral contém certificado A1, estoque e Google Drive. A chave de estoque foi gravada e mantida nessa posição. As consultas também foram exercitadas com indisponibilidade, preservando o formulário e a alternativa manual.
+O workflow da versão executa a suíte completa com Python portátil, DPAPI, sintaxe da interface, compilação NSIS, instalação/reinstalação, atalho e preservação dos dados. Também confere os arquivos do Modo Simples na instalação. O resultado final é publicado em Actions do repositório VF-Emissor antes da Release estável.
 
-## Windows e limites
+## Limites
 
-O workflow [42996073370](https://github.com/rodriguesviniciusf/VF-Emissor/actions/runs/42996073370) concluiu com sucesso em 11/11/2026, usando o código c2ad03d8876eb01cf79fb5a52a1078109f1bc6b7. Foram aprovados 118 testes do motor e 163 dos 164 testes web/desktop; somente o teste destinado a plataformas sem DPAPI foi ignorado. O teste nativo de DPAPI, incluindo recuperação após reiniciar o processo, foi aprovado no Windows.
-
-As consultas reais de CEP e CNPJ retornaram sucesso também no Windows. A compilação NSIS, instalação e reinstalação silenciosas, criação do atalho, preservação do marcador na pasta de dados, inicialização da versão instalada, catálogo offline e interface de recuperação foram aprovados antes da publicação da Release v0.15.0.
-
-O instalador publicado e baixado para conferência tem 22.490.475 bytes. Seu SHA-256 é `bc174afe65024fbf3a379c9294ae5d02decdea03a3650143a5096bc4d8766a2d`, igual ao manifesto de atualização e ao digest do arquivo no GitHub.
-
-Nenhum A1 real nem transmissão fiscal real foi utilizado. Os serviços de CEP/CNPJ podem variar ou ficar indisponíveis. A sincronização efetiva para a nuvem continua a cargo do Google Drive para computador. A homologação dos cenários reais permanece necessária antes da produção.
+A avaliação de interface e os testes sintéticos não substituem a homologação dos cenários fiscais com o A1 da empresa. A cobertura permanece AL/SVRS, modelo 55, A1, CRT 1/3, ano 2026. Operações e grupos especiais continuam no modo completo. XML e dados originais permanecem locais; o Drive realiza uma cópia adicional via sua pasta sincronizada.

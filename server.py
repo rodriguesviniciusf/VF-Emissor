@@ -15,6 +15,7 @@ from fiscal_events import EventStore, EventService
 from note_validation import validate_note
 from vf_workflow import next_number, duplicate, preview_html
 import editor_recovery
+import simple_mode
 
 VERSION = json.loads((ROOT/'version.json').read_text(encoding='utf-8'))['version']
 RUN_TOKEN = secrets.token_urlsafe(32)
@@ -155,6 +156,7 @@ def get_state(cid=''):
         certificate=dict(c[0].metadata(), session_expires=c[1]) if c else None,
         certificate_saved=vault().exists(cid),certificate_error=VAULT_ERRORS.get(cid,''),
         editing_drafts=editor_recovery.list_copies(STORE,cid,co.get('environment','2')),
+        simple_config=simple_mode.public_state(STORE,cid),
         storage=dict(data_dir=str(STORE.path.parent),xml_dir=str(STORE.path.parent/'notas-fiscais'/co['CNPJCPF'])),
         updates=dict(repository=updater().configuration().get('repository',''),automatic=True,status=updater().status()))
 
@@ -228,6 +230,11 @@ def save_catalog(p):
 def save_note(p):
     cid = p['cid']; co = company(cid); rid = p.get('id') or None
     n = clean_record(p['data'])
+    problems=simple_mode.verify(STORE,cid,n,partial=True)
+    if problems:raise ValueError(problems[0]['message'])
+    attempt_id=simple_mode.existing_attempt(STORE,cid,n)
+    if attempt_id and rid and attempt_id!=rid:raise ValueError('Esta edição já pertence a outro rascunho. Reabra a nota existente.')
+    rid=rid or attempt_id
     env = n.get('environment', co.get('environment', '2'))
     if env not in ('1', '2'): raise ValueError('Ambiente inválido.')
     if env == '1' and not co.get('production_enabled'): raise ValueError('Produção ainda não habilitada.')
@@ -235,6 +242,7 @@ def save_note(p):
         old = note(cid, rid); editable(cid, rid)
         if env != old.get('environment', '2'): raise ValueError('O ambiente de um rascunho salvo não pode ser alterado. Duplique para o outro ambiente.')
         n['cnf'] = old['cnf']
+        if not n.get('number'):n['number']=old['number']
     else:
         n['cnf'] = f'{secrets.randbelow(100000000):08d}'
         n['number'] = next_number(STORE, cid, env, n.get('series', '1')) if not n.get('number') else str(n['number'])
@@ -249,7 +257,7 @@ def save_note(p):
     parsed = datetime.fromisoformat(stamp)
     n['issued_at'] = (parsed.replace(tzinfo=TZ) if parsed.tzinfo is None else parsed).isoformat(timespec='seconds')
     rid=STORE.save('note', n, cid, rid)
-    return dict(id=rid,revision=editor_recovery.revision(n))
+    return dict(id=rid,number=n['number'],revision=editor_recovery.revision(n))
 
 def import_xml(p):
     cid = p['cid']; co = company(cid)
@@ -280,6 +288,14 @@ def import_xml(p):
 
 def action(p):
     cmd = p['action']; cid = p.get('cid', '')
+    if cmd in ('simple_config_save','simple_resolve','simple_review'):
+        company(cid)
+        from business_runtime import LOCK
+        with LOCK:
+            if cmd=='simple_config_save':return dict(config=simple_mode.save(STORE,cid,p))
+            if cmd=='simple_resolve':return dict(note=simple_mode.resolve(STORE,cid,p))
+            n=p['note'];issues=action(dict(action='validate',cid=cid,note=n))['issues'];values,errors=totals(company(cid),n)
+            return dict(issues=issues,totals=values,errors=errors,review_hash=simple_mode.review_hash(n) if not issues and not errors else '')
     if cmd=='lookup_public':
         from public_lookup import lookup
         return lookup(p['kind'],p.get('value',''),cid or 'registration')
@@ -373,7 +389,7 @@ def action(p):
         try: rec = STORE.get('recipient', cid, n.get('recipient_id', ''))
         except ValueError: rec = {}
         issues = validate_note(co, rec, n)
-        return dict(issues=[dict(field=i.field, message=i.message) for i in issues])
+        return dict(issues=simple_mode.verify(STORE,cid,p['note'])+[dict(field=i.field, message=i.message) for i in issues])
     if cmd == 'load_certificate':
         if PREVIEW: raise ValueError('Carregue seu certificado somente no aplicativo local do Windows.')
         raw = base64.b64decode(p['data'], validate=True)
@@ -387,7 +403,11 @@ def action(p):
         CERTS.pop(cid,None);vault().remove(cid);VAULT_ERRORS.pop(cid,None);return dict(ok=True)
     if cmd == 'import_xml': return import_xml(p)
     if cmd == 'prepare':
-        n = note(cid, p['id']); snap = checked_snapshot(cid, n)
+        n = note(cid, p['id'])
+        problems=simple_mode.verify(STORE,cid,n)
+        if problems:raise ValueError(problems[0]['message'])
+        if n.get('simple_mode',{}).get('active') and p.get('simple_review_hash')!=simple_mode.review_hash(n):raise ValueError('Confira novamente o resumo do Modo Simples antes de emitir.')
+        snap = checked_snapshot(cid, n)
         cert = certificate(cid); unsigned, key, _ = build_unsigned(snap['company'], snap['recipient'], n)
         signed = cert.sign(unsigned)
         fid = FiscalStore(STORE).prepare(cid, p['id'], snap, signed, key)
@@ -461,7 +481,7 @@ class Handler(BaseHTTPRequestHandler):
         u = urlparse(self.path); q = parse_qs(u.query)
         try:
             if u.path=='/municipios.json':return self.reply((ROOT/'base/assets/municipios.json').read_bytes())
-            if u.path in ('/', '/assistance-ui.js', '/assistance.css', '/app.js', '/normal-ui.js', '/product-ui.js', '/settings-ui.js', '/desktop-ui.js', '/workspace-ui.js', '/workspace.css', '/business-ui.js', '/business.css', '/style.css', '/favicon.svg'):
+            if u.path in ('/', '/simple-ui.js', '/simple.css', '/assistance-ui.js', '/assistance.css', '/app.js', '/normal-ui.js', '/product-ui.js', '/settings-ui.js', '/desktop-ui.js', '/workspace-ui.js', '/workspace.css', '/business-ui.js', '/business.css', '/style.css', '/favicon.svg'):
                 f = ROOT/'static'/('index.html' if u.path=='/' else u.path[1:])
                 return self.reply(f.read_bytes(), mimetypes.guess_type(f)[0] or 'text/plain', session=u.path=='/')
             if u.path == '/health': return self.reply(dict(app='VF Emissor Web', version=VERSION))
@@ -586,7 +606,7 @@ class Handler(BaseHTTPRequestHandler):
                 if not session_cid and not (registering or importing or p.get('action') in ('shutdown','lookup_public')):return self.reply(dict(error='Entre na empresa para continuar.'),status=401)
                 if session_cid and p.get('action')=='save_catalog' and p.get('kind')=='company' and p.get('id') and p['id']!=session_cid:return self.reply(dict(error='Cadastro pertence a outra empresa.'),status=403)
                 expected_company=self.headers.get('X-VF-Company','')
-                if session_cid and ((expected_company and expected_company!=session_cid) or (str(p.get('action','')).startswith('editor_') and p.get('cid')!=session_cid)):
+                if session_cid and ((expected_company and expected_company!=session_cid) or (str(p.get('action','')).startswith(('editor_','simple_')) and p.get('cid')!=session_cid)):
                     return self.reply(dict(error='A empresa foi alterada em outro acesso. Recarregue a página antes de continuar; nenhuma edição foi gravada em outra empresa.'),status=409)
                 p['cid']=session_cid or ''
             elif session_cid:p['cid']=session_cid
