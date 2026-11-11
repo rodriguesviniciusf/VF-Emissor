@@ -22,8 +22,11 @@ def backup_company(store,cid,cnpj,vault_file=None):
                 folder=store.path.parent/relative
                 if folder.exists():
                     for f in folder.rglob('*'):
-                        if f.is_file() and not f.is_symlink() and f.suffix in ('.xml','.pdf','.json'):z.write(f,Path('dados')/f.relative_to(store.path.parent))
-            if vault_file and Path(vault_file).is_file():z.write(vault_file,Path('dados/certificados-protegidos')/Path(vault_file).name)
+                        if f.is_file() and not f.is_symlink() and f.suffix in ('.xml','.pdf','.json'):z.write(f,(Path('dados')/f.relative_to(store.path.parent)).as_posix())
+            if vault_file and Path(vault_file).is_file():z.write(vault_file,(Path('dados/certificados-protegidos')/Path(vault_file).name).as_posix())
+        # Reabra o diretório central finalizado antes de conferir o conteúdo.
+        # No Windows, os nomes do escritor ainda aberto podem ter separadores locais.
+        with zipfile.ZipFile(output,'a',zipfile.ZIP_DEFLATED) as z:
             hashes={name:hashlib.sha256(z.read(name)).hexdigest() for name in z.namelist()}
             z.writestr('backup-manifest.json',json.dumps(dict(format=2,version='0.14.0',company=cid,cnpj=cnpj,created=datetime.now(timezone.utc).isoformat(),files=hashes),ensure_ascii=False))
         return output.getvalue()
