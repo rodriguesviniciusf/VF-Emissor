@@ -14,6 +14,7 @@ from fiscal import FiscalStore, FiscalService, A1Certificate, build_unsigned, un
 from fiscal_events import EventStore, EventService
 from note_validation import validate_note
 from vf_workflow import next_number, duplicate, preview_html
+import editor_recovery
 
 VERSION = json.loads((ROOT/'version.json').read_text(encoding='utf-8'))['version']
 RUN_TOKEN = secrets.token_urlsafe(32)
@@ -134,7 +135,7 @@ def get_state(cid=''):
         d = fiscal_by_source.get(n['_id']); historical=json.loads(d['snapshot']) if d else None; values, errors = totals(historical['company'] if historical else co,historical['note'] if historical else n)
         try: recipient = STORE.get('recipient', cid, n.get('recipient_id', '')).get('xNome', '')
         except ValueError: recipient = ''
-        documents.append(dict(n, _total=str(money((historical['note'] if historical else n).get('normal_vnftot') or values.get('net','0'))), _errors=errors, _recipient=recipient,
+        documents.append(dict(n, _edit_revision=editor_recovery.revision({k:v for k,v in n.items() if k!='_id'}), _total=str(money((historical['note'] if historical else n).get('normal_vnftot') or values.get('net','0'))), _errors=errors, _recipient=recipient,
             _fiscal_id=d['id'] if d else '', _status=d['status'] if d else 'RASCUNHO',
             _key=d['access_key'] if d else '', _reason=d['reason'] if d else ''))
     events = []
@@ -153,6 +154,7 @@ def get_state(cid=''):
         **__import__('business_runtime').state(STORE,cid,co.get('environment','2')), rules=rows('rule', cid), documents=documents, events=events, received=rows('received', cid),
         certificate=dict(c[0].metadata(), session_expires=c[1]) if c else None,
         certificate_saved=vault().exists(cid),certificate_error=VAULT_ERRORS.get(cid,''),
+        editing_drafts=editor_recovery.list_copies(STORE,cid,co.get('environment','2')),
         storage=dict(data_dir=str(STORE.path.parent),xml_dir=str(STORE.path.parent/'notas-fiscais'/co['CNPJCPF'])),
         updates=dict(repository=updater().configuration().get('repository',''),automatic=True,status=updater().status()))
 
@@ -246,7 +248,8 @@ def save_note(p):
     stamp = n.get('issued_at') or datetime.now(TZ).isoformat(timespec='seconds')
     parsed = datetime.fromisoformat(stamp)
     n['issued_at'] = (parsed.replace(tzinfo=TZ) if parsed.tzinfo is None else parsed).isoformat(timespec='seconds')
-    return dict(id=STORE.save('note', n, cid, rid))
+    rid=STORE.save('note', n, cid, rid)
+    return dict(id=rid,revision=editor_recovery.revision(n))
 
 def import_xml(p):
     cid = p['cid']; co = company(cid)
@@ -277,6 +280,17 @@ def import_xml(p):
 
 def action(p):
     cmd = p['action']; cid = p.get('cid', '')
+    if cmd=='lookup_public':
+        from public_lookup import lookup
+        return lookup(p['kind'],p.get('value',''),cid or 'registration')
+    if cmd in ('editor_save','editor_list','editor_restore','editor_drop'):
+        co=company(cid)
+        from business_runtime import LOCK
+        with LOCK:
+            if cmd=='editor_save':return editor_recovery.save(STORE,cid,p)
+            if cmd=='editor_list':return dict(copies=editor_recovery.list_copies(STORE,cid,co.get('environment','2')))
+            if cmd=='editor_restore':return editor_recovery.restore(STORE,cid,p['id'],p.get('as_new') is True)
+            return editor_recovery.drop(STORE,cid,p['id'],p.get('version'))
     from business_runtime import COMMANDS,action as business_action
     if cmd in COMMANDS:
         value=business_action(STORE,p,PREVIEW,import_xml)
@@ -446,7 +460,8 @@ class Handler(BaseHTTPRequestHandler):
         if not self.valid_host(): return self.reply(dict(error='Host inválido.'), status=403)
         u = urlparse(self.path); q = parse_qs(u.query)
         try:
-            if u.path in ('/', '/app.js', '/normal-ui.js', '/product-ui.js', '/settings-ui.js', '/desktop-ui.js', '/workspace-ui.js', '/workspace.css', '/business-ui.js', '/business.css', '/style.css', '/favicon.svg'):
+            if u.path=='/municipios.json':return self.reply((ROOT/'base/assets/municipios.json').read_bytes())
+            if u.path in ('/', '/assistance-ui.js', '/assistance.css', '/app.js', '/normal-ui.js', '/product-ui.js', '/settings-ui.js', '/desktop-ui.js', '/workspace-ui.js', '/workspace.css', '/business-ui.js', '/business.css', '/style.css', '/favicon.svg'):
                 f = ROOT/'static'/('index.html' if u.path=='/' else u.path[1:])
                 return self.reply(f.read_bytes(), mimetypes.guess_type(f)[0] or 'text/plain', session=u.path=='/')
             if u.path == '/health': return self.reply(dict(app='VF Emissor Web', version=VERSION))
@@ -568,7 +583,7 @@ class Handler(BaseHTTPRequestHandler):
             registering=p.get('action')=='save_catalog' and p.get('kind')=='company' and not p.get('id')
             importing=p.get('action')=='import_legacy'
             if not PREVIEW:
-                if not session_cid and not (registering or importing or p.get('action')=='shutdown'):return self.reply(dict(error='Entre na empresa para continuar.'),status=401)
+                if not session_cid and not (registering or importing or p.get('action') in ('shutdown','lookup_public')):return self.reply(dict(error='Entre na empresa para continuar.'),status=401)
                 if session_cid and p.get('action')=='save_catalog' and p.get('kind')=='company' and p.get('id') and p['id']!=session_cid:return self.reply(dict(error='Cadastro pertence a outra empresa.'),status=403)
                 p['cid']=session_cid or ''
             elif session_cid:p['cid']=session_cid

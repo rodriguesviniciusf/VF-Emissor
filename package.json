@@ -1,9 +1,9 @@
 {
   "name": "vf-emissor-web-local",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "private": true,
   "scripts": {
     "dev": "python3 launch_preview.py",
-    "check": "node --check static/app.js && node --check static/normal-ui.js && node --check static/product-ui.js && node --check static/settings-ui.js && node --check static/desktop-ui.js && node --check static/workspace-ui.js && node --check static/business-ui.js && python3 -m py_compile server.py"
+    "check": "node --check static/app.js && node --check static/normal-ui.js && node --check static/product-ui.js && node --check static/settings-ui.js && node --check static/desktop-ui.js && node --check static/workspace-ui.js && node --check static/business-ui.js && python3 -m py_compile server.py && node --check static/assistance-ui.js"
   }
 }
