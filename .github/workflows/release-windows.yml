@@ -16,6 +16,9 @@ jobs:
         with:
           python-version: '3.12.10'
           architecture: x64
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
       - name: Preparar Python embarcado e dependências públicas
         shell: pwsh
         run: python .\scripts\bootstrap_windows.py
@@ -38,6 +41,22 @@ jobs:
           if ($LASTEXITCODE) { throw 'JavaScript do Modo Simples inválido.' }
           node --test .\tests\certificate-ui.test.cjs
           if ($LASTEXITCODE) { throw 'Regressao do certificado na interface.' }
+          node --check .\static\access-ui.js
+          if ($LASTEXITCODE) { throw 'Interface de acesso invalida.' }
+          node --check .\portal\app.js
+          if ($LASTEXITCODE) { throw 'Painel administrativo invalido.' }
+          node --check .\portal\auth.js
+          if ($LASTEXITCODE) { throw 'Recuperacao de acesso invalida.' }
+          node --test .\tests\portal-auth.test.cjs
+          if ($LASTEXITCODE) { throw 'Falha na recuperacao de acesso.' }
+          node --test .\tests\access-edge.test.cjs
+          if ($LASTEXITCODE) { throw 'Falha no servico de licencas.' }
+          $deps = Join-Path $env:RUNNER_TEMP 'vf-sql-tests'
+          npm install --prefix $deps @electric-sql/pglite@0.5.16
+          if ($LASTEXITCODE) { throw 'Falha ao preparar PostgreSQL de teste.' }
+          $env:VF_PGLITE_PATH = Join-Path $deps 'node_modules/@electric-sql/pglite'
+          node --test .\tests\access-sql.test.cjs
+          if ($LASTEXITCODE) { throw 'Falha nas regras de autorizacao.' }
       - name: Conferir disponibilidade das consultas públicas
         shell: pwsh
         run: .\portable\python.exe .\scripts\check_public_lookups.py

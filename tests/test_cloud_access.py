@@ -95,6 +95,24 @@ class AccessTests(unittest.TestCase):
   self.access.config_file.unlink()
   with self.assertRaisesRegex(ValueError,'ausente'):Access(self.root,self.root/'data')
  def test_installation_identity_survives_restart(self):self.assertEqual(Access(self.root,self.root/'data').installation,self.access.installation)
+ def test_bundled_configuration_activates_existing_company_and_persists(self):
+  install=self.root/'updated-install';install.mkdir();data=self.root/'old-data';data.mkdir()
+  db=Store(data/'vf.sqlite3');cid=db.save('company',dict(CNPJCPF=CNPJ,xNome='Empresa anterior preservada'));db.db.close()
+  xml=data/'notas-fiscais'/'original.xml';xml.parent.mkdir();xml.write_bytes(b'<xml>arquivo preservado</xml>')
+  (install/'commercial-config.json').write_text(json.dumps(self.config),encoding='utf-8')
+  upgraded=Access(install,data);self.assertTrue(upgraded.enabled);self.assertTrue(upgraded.marker.exists());self.assertTrue(upgraded.config_file.exists())
+  db=Store(data/'vf.sqlite3')
+  try:self.assertEqual(db.get('company','',cid)['xNome'],'Empresa anterior preservada')
+  finally:db.db.close()
+  self.assertEqual(xml.read_bytes(),b'<xml>arquivo preservado</xml>')
+  (install/'commercial-config.json').unlink();self.assertTrue(Access(install,data).enabled)
+ def test_official_bundle_does_not_use_previous_custom_project(self):
+  (self.root/'commercial-config.json').write_text(json.dumps(self.config),encoding='utf-8')
+  self.access.config_file.write_text(json.dumps(dict(self.config,url='https://zyxwvutsrqponmlkjihg.supabase.co')),encoding='utf-8')
+  self.assertEqual(Access(self.root,self.root/'data').config,self.config)
+ def test_invalid_official_bundle_does_not_fall_back_to_local_access(self):
+  (self.root/'commercial-config.json').write_text('{}',encoding='utf-8')
+  with self.assertRaisesRegex(ValueError,'comercial inválida'):Access(self.root,self.root/'data')
  def test_first_company_appears_immediately_after_signup(self):
   session=self.access.signup({'email':'teste@example.invalid','password':'synthetic-password','name':'Pessoa teste','cnpj':CNPJ,'company_name':'Empresa teste'})
   self.assertEqual(self.access.profile(session)['companies'][0]['cnpj'],CNPJ)

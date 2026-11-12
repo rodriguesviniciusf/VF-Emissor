@@ -5,6 +5,11 @@ Set-Location $Root
 $Version = (Get-Content version.json -Raw | ConvertFrom-Json).version
 if ($Version -notmatch '^\d+\.\d+\.\d+$') { throw 'Versao invalida em version.json' }
 if ($Repository -and $Repository -notmatch '^[A-Za-z0-9-]+/[A-Za-z0-9_.-]+$') { throw 'Repositorio invalido' }
+$PublicAccess = Join-Path $Root 'deployment\public-access.json'
+if (!(Test-Path $PublicAccess)) { throw 'A configuracao publica de acesso deve acompanhar todo instalador.' }
+& (Join-Path $Root 'portable\python.exe') -c "import json,sys;sys.path.insert(0,'base');from cloud_access import normalize_config;normalize_config(json.load(open('deployment/public-access.json',encoding='utf-8')))"
+if ($LASTEXITCODE) { throw 'Configuracao publica de acesso invalida. Instalador nao sera gerado.' }
+Copy-Item $PublicAccess (Join-Path $Root 'commercial-config.json') -Force
 if ($Repository) { @{ repository=$Repository; automatic=$true } | ConvertTo-Json | Set-Content release-channel.json -Encoding UTF8 }
 # Gera JSON sem BOM para leitura consistente no Python embarcado.
 if ($Repository) { [IO.File]::WriteAllText((Join-Path $Root 'release-channel.json'), (@{ repository=$Repository; automatic=$true } | ConvertTo-Json), (New-Object Text.UTF8Encoding($false))) }

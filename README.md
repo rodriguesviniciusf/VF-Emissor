@@ -1,8 +1,8 @@
 # VF Emissor
 
-## Candidata 0.19.0 — acesso e assinaturas
+## Versão 0.19.1 — acesso e assinaturas
 
-Conta por e-mail/senha com aprovação manual da conta e de cada CNPJ, painel de administração, renovações por meses e licença assinada por instalação. Consulte **ACESSO-E-ASSINATURAS.md** para implantação, uso e testes. O controle comercial precisa de projeto Supabase e conta administradora configurados; não ativa automaticamente sobre os dados existentes. A candidata é validada separadamente antes de substituir a versão estável.
+O instalador já ativa o login por e-mail/senha e a aprovação manual da conta e de cada CNPJ. Isso também vale para empresas cadastradas em versões anteriores. Os cadastros, certificados e XML são preservados e reutilizados quando o mesmo CNPJ é aprovado. Painel de administração, renovações por meses e licença assinada por instalação. Consulte **ACESSO-E-ASSINATURAS.md** para uso e testes.
 
 Emissor local de NF-e para Windows, com interface no navegador, dados por empresa e XML guardados no PC de emissão.
 

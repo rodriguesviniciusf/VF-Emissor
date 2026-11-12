@@ -28,10 +28,13 @@ class Access:
         self.root=Path(root);self.folder=Path(data_dir)/'acesso';self.folder.mkdir(parents=True,exist_ok=True)
         self.marker=self.folder/'ativado';self.config_file=self.folder/'public-config.json'
         self.config={};self.transport=transport or requests.Session();self.leases={};self.anchors={}
-        config=self.config_file if self.config_file.exists() else self.root/'commercial-config.json'
+        bundled=self.root/'commercial-config.json'
+        config=bundled if bundled.exists() else self.config_file
         if config.exists():
             try:self.config=normalize_config(json.loads(config.read_text(encoding='utf-8')))
             except Exception as exc:raise ValueError('Configuração comercial inválida. Contate o suporte.') from exc
+            if config==bundled:
+                path=self.config_file.with_suffix('.tmp');path.write_text(json.dumps(self.config),encoding='utf-8');path.replace(self.config_file)
             self.marker.touch(exist_ok=True)
         elif self.marker.exists():raise ValueError('Configuração de acesso ausente. Restaure a configuração; os dados fiscais foram preservados.')
         identity=self.folder/'installation.json'
