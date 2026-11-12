@@ -59,6 +59,8 @@ def make_item(store,cid,m,pid,values=None):
         if special(groups):raise ValueError('Quantidades tributáveis ou créditos/ajustes específicos exigem o modo completo.')
     # O mesmo calculate utilizado pelo editor completo também valida os grupos suportados.
     calculate(i,r,co.get('CRT','1'))
+    from interstate import validate as validate_interstate
+    validate_interstate(co,dict(UF=m['target_uf'],indIEDest=m['recipient_ie']),dict(operation='1',purpose='1',destination='1' if m['target_uf']==co.get('UF') else '2',final=m['final'],items=[i]))
     i['simple_source_stamp']=digest(dict(product=p,rule=r))
     return i
 def release_issues(store,cid,m):

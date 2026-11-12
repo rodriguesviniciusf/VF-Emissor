@@ -167,7 +167,7 @@ def unsigned_schema_issues(data):
     return result
 
 def build_unsigned(company,recipient,note):
-    """Vendas internas AL, CRT 1, emissão em 2026, sem ST/benefícios/IBS/CBS."""
+    """Emitente AL/SVRS, destinatários de todas as UFs, CRT 1/3, leiaute 2026."""
     company=copy.deepcopy(company); recipient=copy.deepcopy(recipient)
     for role,party in [('Emitente',company),('Destinatário',recipient)]:
         party['UF']=str(party.get('UF','')).strip().upper()
@@ -211,6 +211,8 @@ def build_unsigned(company,recipient,note):
             raise ValueError('Preço unitário aceita até dez casas decimais.')
     from tax_scenarios import validate_context
     validate_context(company,recipient,note)
+    from interstate import validate as validate_interstate
+    validate_interstate(company,recipient,note)
     if normal:
         from normal_fiscal import aggregate_totals
         totals=aggregate_totals(company,recipient,note)

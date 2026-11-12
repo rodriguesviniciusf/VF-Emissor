@@ -91,9 +91,11 @@ def validate_note(company,recipient,note,deep=True):
     try:validate_context(company,recipient,note)
     except ValueError as exc:
         if not isinstance(exc,TaxError):add('items',str(exc));exc=None
-        if exc is None:return issues
-        affected=getattr(exc,'item_index',next((i for i,item in enumerate(note.get('items',[])) if item.get('taxes') or item.get('rule',{}).get('icms_code') in ('201','202','203')),0))
-        add('item.'+str(affected)+'.taxes.'+exc.field,str(exc))
+        if exc is not None:
+            affected=getattr(exc,'item_index',next((i for i,item in enumerate(note.get('items',[])) if item.get('taxes') or item.get('rule',{}).get('icms_code') in ('201','202','203')),0))
+            add('item.'+str(affected)+'.taxes.'+exc.field,str(exc))
+    from interstate import issues as interstate_issues
+    for issue in interstate_issues(company,recipient,note):add(issue['field'],issue['message'])
     if deep and not issues:
         from fiscal import build_unsigned,unsigned_schema_issues,TZ
         checked=copy.deepcopy(note);checked.setdefault('issued_at',datetime.now(TZ).isoformat(timespec='seconds'))

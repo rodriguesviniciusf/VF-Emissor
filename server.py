@@ -17,6 +17,7 @@ from vf_workflow import next_number, duplicate, preview_html
 import editor_recovery
 import simple_mode
 import ncm_catalog,nature_catalog
+import interstate
 
 VERSION = json.loads((ROOT/'version.json').read_text(encoding='utf-8'))['version']
 RUN_TOKEN = secrets.token_urlsafe(32)
@@ -160,7 +161,7 @@ def get_state(cid=''):
         certificate_saved=vault().exists(cid),certificate_error=VAULT_ERRORS.get(cid,''),
         editing_drafts=editor_recovery.list_copies(STORE,cid,co.get('environment','2')),
         simple_config=simple_mode.public_state(STORE,cid),
-        natures=nature_catalog.listing(STORE,cid),ncm_status=ncm_catalog.local(STORE.path.parent).status(),
+        natures=nature_catalog.listing(STORE,cid),ncm_status=ncm_catalog.local(STORE.path.parent).status(),interstate_settings=interstate.load(STORE,cid),
         storage=dict(data_dir=str(STORE.path.parent),xml_dir=str(STORE.path.parent/'notas-fiscais'/co['CNPJCPF'])),
         updates=dict(repository=updater().configuration().get('repository',''),automatic=True,status=updater().status()))
 
@@ -292,6 +293,13 @@ def import_xml(p):
 
 def action(p):
     cmd = p['action']; cid = p.get('cid', '')
+    if cmd in ('interstate_save_settings','interstate_prepare_item'):
+        co=company(cid)
+        if cmd=='interstate_save_settings':
+            from business_runtime import LOCK
+            with LOCK:return dict(settings=interstate.save(STORE,cid,p))
+        n=p['note'];rec=STORE.get('recipient',cid,n.get('recipient_id',''))
+        return interstate.prepare_item(co,rec,n,p['item'],p)
     if cmd in ('nature_save','nature_delete'):
         company(cid)
         from business_runtime import LOCK
@@ -500,7 +508,7 @@ class Handler(BaseHTTPRequestHandler):
         u = urlparse(self.path); q = parse_qs(u.query)
         try:
             if u.path=='/municipios.json':return self.reply((ROOT/'base/assets/municipios.json').read_bytes())
-            if u.path in ('/', '/ncm-ui.js', '/ncm.css', '/simple-ui.js', '/simple.css', '/assistance-ui.js', '/assistance.css', '/app.js', '/normal-ui.js', '/product-ui.js', '/settings-ui.js', '/desktop-ui.js', '/workspace-ui.js', '/workspace.css', '/business-ui.js', '/business.css', '/style.css', '/favicon.svg'):
+            if u.path in ('/', '/interstate-ui.js', '/interstate.css', '/ncm-ui.js', '/ncm.css', '/simple-ui.js', '/simple.css', '/assistance-ui.js', '/assistance.css', '/app.js', '/normal-ui.js', '/product-ui.js', '/settings-ui.js', '/desktop-ui.js', '/workspace-ui.js', '/workspace.css', '/business-ui.js', '/business.css', '/style.css', '/favicon.svg'):
                 f = ROOT/'static'/('index.html' if u.path=='/' else u.path[1:])
                 return self.reply(f.read_bytes(), mimetypes.guess_type(f)[0] or 'text/plain', session=u.path=='/')
             if u.path == '/health': return self.reply(dict(app='VF Emissor Web', version=VERSION))

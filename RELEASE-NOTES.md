@@ -1,12 +1,10 @@
-VF Emissor 0.17.0
+VF Emissor 0.18.0
 
-- Consulta automática do NCM completo no cadastro de produtos e no item da NF-e (Simples e Regime Normal): descrição, grupo completo, período informado pela fonte e referência da tabela oficial Receita/Siscomex.
-- Pesquisa por código ou palavras da descrição. Seleção explícita do código, preservando a descrição comercial e os tributos do produto.
-- Catálogo oficial offline com 10.516 NCM e 15.157 nós (referência inicial 11/11/2026), atualização diária em segundo plano e atualização manual. Falhas mantêm a última cópia e exibem aviso. A fonte contém somente a tabela vigente; consultas históricas/futuras ou sem tabela atual não são declaradas inválidas por mera ausência.
-- Conferência local de NCM antes da preparação/primeira transmissão, com link para corrigir o item. O Modo Simples usa a mesma verificação e exibe os avisos de vigência.
-- Configurações > Fiscal: lista de naturezas de operação por empresa, com inclusão e exclusão inclusive das opções iniciais. Sugestões disponíveis na NF-e, no padrão fiscal e nos modelos do Modo Simples. Exclusões não reescrevem notas, padrões ou modelos existentes e são preservadas no backup/restauração.
-- NF-e de fornecedor/recebidas: botão Excluir importação com confirmação. Remove a importação das listas e do pacote mensal; estorna uma única vez os movimentos de estoque vinculados, mesmo com controle desativado. Preserva XML e eventos locais, movimentos originais e histórico. Não cancela a nota na SEFAZ nem altera notas emitidas. Reimportar o XML após a exclusão permite registrá-lo novamente.
+- AL → destinatários de todas as UFs brasileiras, incluindo Distrito Federal. AL → AL permanece interna; autorizador AL/SVRS e CRT 1/3 preservados.
+- Conferência de operação/CFOP, limites de ICMS interestadual, origem importada, falta/contexto do DIFAL, partilha para emissão normal 2026, valores de DIFAL/FCP e IE isenta conforme NT 2025.001 v1.03, com exceções documentadas. Erros levam ao campo do item; assinatura/envio não ignoram a conferência.
+- Botão Preparar operação interestadual no item da nota: CFOP conferido, referência interestadual da origem e DIFAL com alíquota interna/FCP informados pelo operador. Aplica somente no item, exige nova revisão e não altera cadastro, CST, benefícios ou notas antigas.
+- Configurações > Fiscal > Alagoas → todo o Brasil: referências de ICMS interno/FCP por UF e empresa, com vigência, fundamento, edição e exclusão. Incluídas no backup e restauração inclusive em outra instalação da mesma empresa.
+- Modo Simples confere os perfis no contexto da UF do modelo antes de disponibilizar os produtos.
+- Testes estruturais em 27 UFs, dois regimes, dois indicadores de IE e dois ambientes, mais cenários importados, exceções e regressões. Não transmite NF-e reais nem usa certificado real.
 
-Instale com o emissor encerrado ou abra novamente pelo atalho para receber a atualização do canal rodriguesviniciusf/VF-Emissor. Cadastros, XML, modelos e certificados protegidos são preservados. Não utiliza o canal VF-Fiscal-Updates.
-
-Testes com documentos sintéticos; nenhuma NF-e real foi transmitida. Cobertura fiscal preservada: AL/SVRS, A1, modelo 55, CRT 1/3 e 2026. A consulta de vigência não determina a classificação adequada à mercadoria nem garante autorização pela SEFAZ.
+Instalador Windows com o canal rodriguesviniciusf/VF-Emissor. Dados locais, XML e cofre A1 preservados. ST/MVA, benefícios e alíquotas internas/FCP dependem da mercadoria e da legislação revisada; não há emissão automática de guias nem garantia de autorização. Consulte REGRAS-INTERESTADUAIS.md. Mantido o escopo A1/modelo 55/emissão em 2026 e as limitações anteriores de cenários especiais do Simples Nacional.

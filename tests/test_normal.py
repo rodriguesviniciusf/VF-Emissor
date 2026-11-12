@@ -61,7 +61,7 @@ class NormalTests(unittest.TestCase):
         g['ICMS']['ICMS00'].update(vBC='1000',pICMS='4');g['PIS']['PISAliq'].update(vBC='0',pPIS='0');g['COFINS']['COFINSAliq'].update(vBC='0',pCOFINS='0')
         _,t=self.xml();self.assertEqual(t['icms'],Decimal('40'));self.assertEqual(t['pis_base'],Decimal('0'));self.assertEqual(t['cofins_base'],Decimal('0'))
     def test_interstate_difal_with_explicit_rates(self):
-        self.rec.update(UF='SP',cMun='3552205');self.rule['CFOP']='6102';self.n['destination']='2'
+        self.rec.update(UF='SP',cMun='3552205');self.rule.update(CFOP='6102',icms_rate='12');self.n['destination']='2'
         self.groups()['ICMSUFDest']=dict(vBCFCPUFDest='1000',pFCPUFDest='2',pICMSUFDest='18',pICMSInter='12.00',pICMSInterPart='100')
         _,t=self.xml();self.assertEqual(t['difal'],Decimal('60'));self.assertEqual(t['fcp_dest'],Decimal('20'))
     def test_wrong_difal_context_is_rejected(self):

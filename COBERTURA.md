@@ -1,4 +1,4 @@
-# Cobertura e trabalho restante — 0.15.0
+# Cobertura e trabalho restante — 0.18.0
 
 Este arquivo distingue implementação, verificação local e validação com a SEFAZ. O projeto ainda não reproduz integralmente o NF-e Mais.
 
@@ -14,7 +14,7 @@ Este arquivo distingue implementação, verificação local e validação com a 
 | Recebidas/fornecedores | Importação de XML processado pertencente à empresa | Importação e cancelamento por arquivo; sem distribuição automática DF-e, NSU, manifestação ou busca sem arquivo |
 | Configurações | Abas por assunto; padrões usados em novos rascunhos; dados do contador; autorizados XML e município do fato gerador | Sem SMTP, envio automático, gestão de papéis de usuários ou API pública |
 | Interface dos produtos | CST troca o grupo; campos por modalidade; resumo lateral e cartões durante digitação; ST por fórmula explícita ou base manual | Sem enquadramento automático, MVA ajustada ou cálculo por dentro |
-| Cadastros | Clientes, produtos e perfis; perfil de tributação a partir do item | Importação assistida CSV/XLSX/XML de produtos/clientes/fornecedores; sem consulta automática de IE, NCM/CEST/benefícios nem migração integral de outro ERP |
+| Cadastros | Clientes, produtos e perfis; perfil de tributação a partir do item | Importação assistida CSV/XLSX/XML de produtos/clientes/fornecedores; consulta oficial de descrição/vigência NCM; sem consulta automática de IE, CEST/benefícios nem migração integral de outro ERP |
 | Produtos e operações especiais | Tributação tipada dos grupos fiscais | DI/adições, exportação/drawback, veículos, medicamentos, rastreabilidade, demais grupos de produto e operações especiais não estão integrados à interface/XML |
 | Finanças | Faturas/duplicatas e relatórios de notas autorizadas | Sem contas bancárias, conciliação, baixa de recebimentos ou ERP completo |
 | Infraestrutura | Windows portátil, dados SQLite, backup local, proteção de acesso local | Sem execução Windows neste ambiente; sem hospedagem pública, HTTPS/login multiusuário, A3, NFC-e ou NFS-e |
@@ -56,3 +56,14 @@ A restauração cria cópia anterior e desabilita produção para revisão de nu
 ## Modo Simples 0.16.0
 
 Interface opcional para NF-e normal de saída, sem alteração do motor fiscal ou ampliação de conector. Modelos revisados são separados por empresa, UF de destino e indicador de IE. Os perfis precisam estar revisados, corresponder ao regime e usar CFOP compatível com o destino. Preenchimento usa o mesmo calculate, validate_note, assinatura A1 e serviços fiscais do modo completo. Grupos especiais, ST e valores retidos específicos, quantidades tributáveis ou créditos/ajustes que não podem ser reaproveitados como parâmetros fixos exigem o modo completo. Modelos não definem a tributação automaticamente nem habilitam produção.
+
+
+## 0.18.0 — AL para todas as UFs
+
+Emitente continua AL, com autorização em AL/SVRS. Destinatários nas 27 UFs brasileiras (AL interna + 26 destinos interestaduais, incluindo DF) têm matriz estrutural testada para CRT 1/3, contribuinte/não contribuinte e os dois ambientes. A alteração não habilita emitentes de outras UFs, exterior, NFC-e, nem emissão em 2027.
+
+Conferência adicional de CFOP/destino, limites de ICMS interestadual, exigência/contexto de DIFAL e exceções documentadas, origem importada, partilha de 2026, cálculos manuais DIFAL/FCP e indicador de IE conforme NT 2025.001 v1.03. Validações também são aplicadas no modo simples e antes da assinatura/envio. Não existe garantia de aprovação por todas as regras ou cadastros da SEFAZ.
+
+Assistente no item normal de saída propõe CFOP a conferir, aplica alíquota interestadual de referência à origem e permite formar DIFAL com os parâmetros conferidos pelo operador. Não escolhe CST, benefício, NCM, enquadramento ou alíquota interna/FCP do produto. Referências por UF/empresa têm datas e fundamento, seguem no backup e não substituem parâmetros já salvos em notas. ST/MVA e suas bases específicas, antecipações e recolhimentos/GNRE permanecem para conferência; as restrições anteriores de ST/IPI devolvido no CRT 1 continuam.
+
+Instalador Windows e regressões são verificados no CI antes da publicação. Não foram transmitidas NF-e reais ou simuladas à SEFAZ; os testes usam certificado sintético local. Consulte REGRAS-INTERESTADUAIS.md para as fontes e o alcance de cada verificação.

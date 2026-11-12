@@ -1,9 +1,9 @@
-# Validação 0.17.0
+# Validação 0.18.0
 
-Testes Python: catálogo completo e zeros iniciais; descrição por hierarquia; busca com acentos e prefixos; vigência nos limites; ausência em tabela atual versus datas não cobertas; fonte indisponível/arquivo inválido preservando a cópia anterior; consulta sem envio de dados empresariais; bloqueio do NCM inválido antes de carregar certificado/assinar; correção por campo nos modos completo e simples.
+Matriz de 216 combinações AL → 27 UFs, CRT 1/3, destinatário contribuinte/não contribuinte e homologação/produção simuladas. Cada combinação gera XML, passa no XSD com assinatura por certificado sintético e confere UF, idDest, chave e presença/ausência de DIFAL. Mais 104 cenários cobrem as origens importadas 1/2/3/8 nos 26 destinos interestaduais. As taxas internas/FCP dos testes são fictícias, não uma tabela para uso fiscal.
 
-Operações: adicionar/excluir naturezas por empresa, inclusive todas as iniciais, persistência após reiniciar e restauração para outro identificador da mesma empresa. Notas e modelos existentes mantêm o texto. Exclusão de importação com confirmação, isolamento de empresa/ambiente, preservação do XML/documento fiscal, estorno uma única vez, cancelamento anterior, controle desativado, pendências de vínculo, reimportação e rollback integral se houver falha ao arquivar.
+Vinte testes novos verificam a matriz, limites próprios/partilha/valores manuais, CFOP/destino/IBGE, exceções de DIFAL, lista atual de IE isenta, assistente sem mutação de cadastro/nota, Simples sem destaque indevido, perfis por UF do Modo Simples, isolamento/persistência/datas e restauração em outro identificador da mesma empresa.
 
-Suíte local: 118 testes do motor, 226 testes web/desktop (um teste DPAPI nativo reservado ao Windows) e oito regressões JavaScript do certificado. Sintaxe dos módulos JavaScript/Python conferida. Conferência visual e funcional da consulta NCM e das naturezas na prévia local com dados fictícios.
+Regressões locais: 118 testes do motor, 246 testes web/desktop (um teste DPAPI nativo reservado ao Windows) e oito testes JavaScript do certificado. A conferência visual usou empresa fictícia: identificou CFOP/ICMS/DIFAL inadequados, aplicou parâmetros só no item, exigiu nova revisão e aprovou a validação estrutural sem transmitir. Nenhum certificado real ou chamada de autorização SEFAZ foi utilizado.
 
-O workflow Windows repete os testes e verifica instalação/reinstalação, preservação dos dados, atalho, inicialização, assets da interface e consulta NCM offline com o runtime embarcado antes de publicar. Certificados reais e comunicação fiscal SEFAZ não foram utilizados nos testes.
+O workflow Windows repete os testes antes da publicação e verifica instalação/reinstalação, preservação de dados, atalho, inicialização e assets NCM/interestadual. Autorização real em cada operação, IE cadastral e enquadramento tributário permanecem sujeitos à conferência com a empresa/SEFAZ.

@@ -29,6 +29,10 @@ try {
   if ($Simple.Content -notmatch 'function renderSimple') { throw 'Modo Simples ausente na instalacao.' }
   $SimpleStyle = Invoke-WebRequest http://127.0.0.1:8788/simple.css
   if ($SimpleStyle.StatusCode -ne 200) { throw 'Visual do Modo Simples ausente.' }
+  $Interstate = Invoke-WebRequest http://127.0.0.1:8788/interstate-ui.js
+  if ($Interstate.Content -notmatch 'function decorateInterstate') { throw 'Assistente interestadual ausente.' }
+  $InterstateStyle = Invoke-WebRequest http://127.0.0.1:8788/interstate.css
+  if ($InterstateStyle.StatusCode -ne 200) { throw 'Visual interestadual ausente.' }
   $Ncm = Invoke-WebRequest http://127.0.0.1:8788/ncm-ui.js
   if ($Ncm.Content -notmatch 'function attachNcmFields') { throw 'Consulta NCM ausente na instalacao.' }
   $NcmStyle = Invoke-WebRequest http://127.0.0.1:8788/ncm.css

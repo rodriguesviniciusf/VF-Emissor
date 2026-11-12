@@ -165,6 +165,7 @@ def restore(store,cid,token,ack):
                 elif kind=='nature_config':
                     from nature_catalog import marker_id
                     rid=marker_id(cid)
+                elif kind=='interstate_settings':rid='interstate-'+cid
                 elif kind=='stock_mapping' and source!=cid:
                     if not all(k in d for k in ('source','source_id','line')):continue
                     rid=mapping_id(cid,d['source'],d['source_id'],d['line'])
