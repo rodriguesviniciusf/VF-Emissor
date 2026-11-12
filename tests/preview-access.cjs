@@ -37,7 +37,7 @@ const db=new PGlite();
   let file=fs.readFileSync(path.join(ROOT,'portal',name));
   if(name==='app.js')file=Buffer.from(file.toString().replace('fetch(config.url+path','fetch(\'/qa-supabase\'+path')
    .replace('const handlers={',"const handlers={'demo-start':async()=>{session={access_token:'demo-admin',until:Date.now()+3600000};await refresh();},")
-   .replace('if(!session){$(\'#app\').innerHTML=login();return;}',"if(!session){$('#app').innerHTML=login().replace('<form id=\"login\">','<button type=\"button\" class=\"primary\" data-action=\"demo-start\">Abrir demonstração de gestão</button><form id=\"login\">');return;}"));
+   .replace('<form id="login">','<button type="button" class="primary" data-action="demo-start">Abrir demonstração de gestão</button><form id="login">'));
   if(name==='index.html')file=Buffer.from(file.toString().replace('<body>','<body><div style="padding:7px;background:#dce9bd;text-align:center;font:12px Segoe UI;color:#314c2e">DEMONSTRAÇÃO · dados fictícios · nenhuma alteração em clientes reais</div>'));
   respond(200,file,({'index.html':'text/html; charset=utf-8','app.js':'text/javascript','style.css':'text/css','favicon.svg':'image/svg+xml'})[name]);
  }).listen(port,'0.0.0.0',()=>process.stdout.write('Demonstração isolada na porta '+port+'\n'));
