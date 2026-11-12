@@ -24,11 +24,11 @@ const renderBeforeWorkspace=render;
 render=function(){
  renderBeforeWorkspace();if(S.authenticated===false)return;
  document.body.dataset.workspacePage=page;
- const heading=$('#page-title');if(heading&&!heading.parentElement.classList.contains('page-heading-copy')){const copy=document.createElement('div');copy.className='page-heading-copy';heading.before(copy);copy.innerHTML='<span class="workspace-crumb">VF Emissor <span>/</span> Gestão fiscal</span>';copy.append(heading);}
+ const heading=$('#page-title');if(heading&&!heading.parentElement.classList.contains('page-heading-copy')){const copy=document.createElement('div');copy.className='page-heading-copy';heading.before(copy);copy.append(heading);}
  if(!$('.nav-caption')){const caption=document.createElement('div');caption.className='nav-caption';caption.textContent='ESPAÇO DE TRABALHO';$('#sidebar nav')?.before(caption);}
  $$('nav a[data-page]').forEach(a=>{const id=a.dataset.page;a.setAttribute('title',titles[id]);if(a.classList.contains('active'))a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');a.innerHTML=`<i>${workspaceIcon(id)}</i><span>${esc(titles[id])}</span>`;});
  const action=$('.page-head [data-action="new-note"]');if(action)action.innerHTML=workspaceIcon('add')+'Nova NF-e';
- const logout=$('.logout-top-btn');if(logout)logout.textContent='Sair / trocar empresa';
+ const logout=$('.logout-top-btn');if(logout)logout.textContent=S.access?.enabled?'Sair':'Sair / trocar empresa';
  const noteTabs={nfe:'NF-e',cce:'Cartas de correção',fornecedor:'Fornecedor',recebidas:'Recebidas'};
  $$('.tabs [data-action="tab"]').forEach(b=>{if(noteTabs[b.dataset.id])b.innerHTML=workspaceIcon('note')+esc(noteTabs[b.dataset.id]);});
  const content=$('#content');if(page==='inicio'&&S.company&&S.cid)content.insertAdjacentHTML('afterbegin',workspaceOverview());
@@ -36,3 +36,5 @@ render=function(){
  if(intros[page]){const [text,count]=intros[page];content.insertAdjacentHTML('afterbegin',`<div class="workspace-intro"><p>${esc(text)}</p><span class="workspace-count">${esc(count)}</span></div>`);}
 };
 if(S.version)render();
+document.addEventListener('click',e=>{const context=$('.account-context[open]');if(context&&!context.contains(e.target))context.open=false;});
+document.addEventListener('keydown',e=>{const context=$('.account-context[open]');if(e.key==='Escape'&&context){const focused=context.contains(document.activeElement);context.open=false;if(focused)context.querySelector('summary')?.focus();}});

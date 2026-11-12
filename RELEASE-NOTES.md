@@ -1,4 +1,13 @@
-VF Emissor 0.19.1
+VF Emissor 0.19.2
+
+- Títulos de login, solicitação e recuperação de acesso centralizados.
+- Empresa e CNPJ em uma área própria no cabeçalho, com botões compactos Empresas e Sair.
+- Assinatura, vencimento, ambiente, conector e regime reunidos no canto superior direito; detalhes ao clicar no resumo, sem as faixas no início.
+- Removido o texto VF Emissor / Gestão fiscal acima do título da página.
+- Aviso do Modo Simples com botão × para ocultar. A escolha fica salva por empresa no navegador; Configurações → Geral permite mostrar novamente.
+- Dados, certificados, XML e controle de aprovações preservados. Atualização pelo mesmo canal do programa.
+
+Histórico — VF Emissor 0.19.1
 
 - Cadastro por e-mail/senha sem confirmação automática, pendente da administração; cada CNPJ possui solicitação e validade próprias.
 - Painel com pendentes, ativos, vencimentos, vencidos, aprovar conta e empresa juntos, renovar 1/3/6/12 meses, suspender/reativar, computadores e histórico.

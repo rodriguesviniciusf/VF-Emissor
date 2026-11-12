@@ -1,6 +1,10 @@
 # VF Emissor
 
-## Versão 0.19.1 — acesso e assinaturas
+## Versão 0.19.2 — interface mais compacta
+
+Títulos de acesso centralizados, identificação da empresa separada dos botões e resumo de assinatura/ambiente no canto superior direito. O aviso do Modo Simples pode ser dispensado pelo ×, com preferência salva por empresa neste navegador. Para reativar, abra Configurações → Geral → Modo Simples.
+
+## Acesso e assinaturas
 
 O instalador já ativa o login por e-mail/senha e a aprovação manual da conta e de cada CNPJ. Isso também vale para empresas cadastradas em versões anteriores. Os cadastros, certificados e XML são preservados e reutilizados quando o mesmo CNPJ é aprovado. Painel de administração, renovações por meses e licença assinada por instalação. Consulte **ACESSO-E-ASSINATURAS.md** para uso e testes.
 
