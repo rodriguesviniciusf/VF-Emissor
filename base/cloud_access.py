@@ -74,6 +74,7 @@ class Access:
         self.request('/auth/v1/signup',{'email':email,'password':password,'data':{'name':name}})
         session=self.login({'email':email,'password':password})
         self.rpc(session,'vf_request_company',{'cnpj_value':cnpj,'company_name':company_name})
+        session['profile']=None
         return session
     def recover(self,p):
         code=str(p.get('code','')).strip();password=str(p.get('password',''))

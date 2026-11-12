@@ -6,7 +6,11 @@ const cnpj=v=>String(v).replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,'$1.$2.$
 const words={pending:'Aguardando aprovação',approved:'Ativa',rejected:'Reprovada',suspended:'Suspensa',expired:'Vencida',soon:'Vence em breve'};
 let config=null,session=null,data=null,view='companies',filter='all',search='',operation=null,previewSequence=0;
 function toast(message,error=false){const el=$('#toast');el.textContent=message;el.className=error?'error':'';el.style.display='block';clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.style.display='none',error?12000:5000);}
-function validConfig(c){return c&&/^https:\/\/[a-z0-9]{10,40}\.supabase\.co$/.test(c.url)&&typeof c.publishable_key==='string'&&c.publishable_key.startsWith('sb_publishable_')||c&&/^https:\/\/[a-z0-9]{10,40}\.supabase\.co$/.test(c.url)&&c.publishable_key?.startsWith('eyJ');}
+function validConfig(c){
+ if(!c||!/^https:\/\/[a-z0-9]{10,40}\.supabase\.co$/.test(c.url)||typeof c.publishable_key!=='string')return false;
+ if(c.publishable_key.startsWith('sb_publishable_'))return true;
+ try{const part=c.publishable_key.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');return c.publishable_key.startsWith('eyJ')&&JSON.parse(atob(part)).role==='anon';}catch{return false;}
+}
 async function request(path,body,auth=true){
  if(auth&&session&&Date.now()>=session.until-60000){const d=await request('/auth/v1/token?grant_type=refresh_token',{refresh_token:session.refresh_token},false);session={...d,until:Date.now()+d.expires_in*1000};}
  const r=await fetch(config.url+path,{method:'POST',headers:{apikey:config.publishable_key,'Content-Type':'application/json',...(auth?{Authorization:'Bearer '+session.access_token}:{})},body:JSON.stringify(body)});
@@ -61,7 +65,7 @@ const handlers={
  'copy-code':async()=>{await navigator.clipboard.writeText($('#recovery-code').textContent);toast('Código copiado.');}
 };
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-action]');if(!b||b.disabled)return;const h=handlers[b.dataset.action];if(!h)return;b.disabled=true;try{await h(b);}catch(err){toast(err.message,true);}finally{if(b.isConnected)b.disabled=false;}});
-document.addEventListener('input',e=>{if(e.target.id==='search'){search=e.target.value;$('#rows').innerHTML=companyRows();}if(e.target.closest('#change-form')){previewSequence++;if(operation)operation.checked=null;$('#confirm-change').disabled=true;}});
+document.addEventListener('input',e=>{if(e.target.id==='search'){search=e.target.value;$('#rows').innerHTML=companyRows();}if(e.target.closest('#change-form')){if(e.target.name==='memo'&&operation?.checked){operation.checked.memo=e.target.value;return;}previewSequence++;if(operation)operation.checked=null;$('#confirm-change').disabled=true;}});
 document.addEventListener('change',async e=>{try{if(e.target.id==='filter'){filter=e.target.value;render();}if(e.target.closest('#change-form'))await previewCurrent();}catch(err){toast(err.message,true);}});
 document.addEventListener('submit',async e=>{
  e.preventDefault();const f=e.target,b=f.querySelector('button');if(!b||b.disabled)return;b.disabled=true;

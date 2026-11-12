@@ -11,12 +11,14 @@ from fiscal import FiscalStore
 from fiscal_events import EventStore
 
 class Transport:
- def __init__(self,access,private):self.access=access;self.private=private;self.calls=[];self.offline=False;self.denied=False;self.status='approved';self.emit=True;self.until=None
+ def __init__(self,access,private):self.access=access;self.private=private;self.calls=[];self.offline=False;self.denied=False;self.status='approved';self.emit=True;self.until=None;self.companies=[]
  def request(self,method,url,**kw):
   self.calls.append((method,url,kw))
   if self.offline:raise requests.ConnectionError('synthetic')
   if '/token?' in url:return self.response(200,dict(user={'id':USER},access_token='private-access-token',refresh_token='private-refresh-token',expires_in=3600))
-  if 'vf_client_state' in url:return self.response(200,dict(id=USER,email='teste@example.invalid',name='Teste',status=self.status,is_admin=False,companies=[]))
+  if 'vf_client_state' in url:return self.response(200,dict(id=USER,email='teste@example.invalid',name='Teste',status=self.status,is_admin=False,companies=self.companies))
+  if 'vf_request_company' in url:
+   self.companies=[dict(id=LICENSE,cnpj=kw['json']['cnpj_value'],status='pending')];return self.response(200,{'id':LICENSE})
   if 'vf-license' in url:
    if self.denied:return self.response(403,{'error':'Computador desativado.'})
    issued=int(time.time());until=self.until if self.until is not None else issued+3600
@@ -93,6 +95,9 @@ class AccessTests(unittest.TestCase):
   self.access.config_file.unlink()
   with self.assertRaisesRegex(ValueError,'ausente'):Access(self.root,self.root/'data')
  def test_installation_identity_survives_restart(self):self.assertEqual(Access(self.root,self.root/'data').installation,self.access.installation)
+ def test_first_company_appears_immediately_after_signup(self):
+  session=self.access.signup({'email':'teste@example.invalid','password':'synthetic-password','name':'Pessoa teste','cnpj':CNPJ,'company_name':'Empresa teste'})
+  self.assertEqual(self.access.profile(session)['companies'][0]['cnpj'],CNPJ)
  def test_recovery_uses_one_time_code_and_does_not_save_password(self):
   self.transport.request=lambda method,url,**kw:Transport.response(200,{'access_token':'temporary-recovery'} if '/verify' in url else {'ok':True})
   self.assertTrue(self.access.recover({'code':'x'*60,'password':'nova-senha-sintetica'})['ok'])

@@ -62,7 +62,10 @@ def access_action(p,session):
     if not session or 'user_id' not in session:raise ValueError('Entre com seu e-mail e senha.')
     if cmd=='home':session.update(cid='',license_id='');return dict(ok=True),None
     if cmd=='profile':return manager.profile(session,force=True),None
-    if cmd=='request_company':return manager.rpc(session,'vf_request_company',{'cnpj_value':document(p.get('cnpj','')),'company_name':p.get('name','')}),None
+    if cmd=='request_company':
+        result=manager.rpc(session,'vf_request_company',{'cnpj_value':document(p.get('cnpj','')),'company_name':p.get('name','')})
+        session['profile']=None
+        return result,None
     if cmd=='select':
         license=manager.lease(session,str(p['id']),force=True)
         cid=next((co['_id'] for co in rows('company') if document(co['CNPJCPF'])==license['cnpj']),None)

@@ -64,5 +64,9 @@ class AccessHTTPTests(unittest.TestCase):
   r=self.call('/api/login',dict(cnpj=CNPJ,password=''));self.assertEqual(r.status_code,400);self.assertIn('e-mail',r.text)
  def test_signout_invalidates_local_account_session(self):
   self.select();r=self.call('/api/logout',{});self.assertEqual(r.status_code,200);r=self.call('/api/state');self.assertFalse(r.json()['authenticated']);self.assertIsNone(r.json()['access']['account'])
+ def test_new_company_request_is_visible_without_waiting_for_profile_cache(self):
+  self.login();self.assertEqual(self.call('/api/state').json()['access']['account']['companies'],[])
+  r=self.call('/api/access',dict(action='request_company',cnpj=CNPJ,name='Empresa teste'));self.assertEqual(r.status_code,200)
+  r=self.call('/api/state');self.assertEqual(r.json()['access']['account']['companies'][0]['cnpj'],CNPJ)
 
 if __name__=='__main__':unittest.main()
