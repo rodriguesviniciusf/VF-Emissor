@@ -1,12 +1,14 @@
-# VF Emissor 0.18.0 — Windows
+# VF Emissor 0.19.1 — Windows
+
+O controle de acesso já vem ativado neste instalador. Entre com e-mail e senha e solicite a aprovação do CNPJ. As empresas antigas também precisam de aprovação: os dados e XML continuam no computador e são reconhecidos pelo CNPJ depois da liberação. Leia **ACESSO-E-ASSINATURAS.md**.
 
 ## Instalar e abrir
 
 1. Encerre a versão antiga do emissor.
-2. Execute **VF-Emissor-Setup-0.18.0.exe** e conclua a instalação. Requer Windows 10/11 de 64 bits.
+2. Execute **VF-Emissor-Setup-0.19.1.exe** e conclua a instalação. Requer Windows 10/11 de 64 bits.
 3. Abra o atalho **VF Emissor** criado na área de trabalho ou no menu Iniciar.
-4. Se você já usava a versão anterior, antes de cadastrar empresas clique em **Já usava o emissor? Importar meus dados** e informe o caminho da pasta antiga do emissor ou sua pasta `dados`. A origem não será apagada.
-5. Entre com o CNPJ e a senha da empresa que já utilizava. Não é necessário refazer os cadastros após a importação.
+4. Entre com seu e-mail e senha ou solicite seu cadastro. Conta e CNPJ precisam de aprovação da administração.
+5. Em **Minhas empresas**, solicite o mesmo CNPJ que já utilizava. Depois da aprovação, selecione a empresa: os cadastros existentes são reutilizados. Em outro computador, restaure o backup da empresa após a liberação do CNPJ.
 
 O programa é instalado no Windows e usa o navegador para sua interface. O serviço local inicia pelo atalho. Para encerrar por completo, use **Encerrar programa**. Fechar apenas a aba do navegador mantém o serviço em execução; clicar no atalho enquanto ele já está aberto reaproveita a instância existente.
 
