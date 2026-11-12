@@ -30,6 +30,10 @@ jobs:
           Get-ChildItem static/*.js | ForEach-Object { node --check $_.FullName; if ($LASTEXITCODE) { throw 'JavaScript invalido.' } }
           node --check portal/app.js
           if ($LASTEXITCODE) { throw 'Painel administrativo invalido.' }
+          node --check portal/auth.js
+          if ($LASTEXITCODE) { throw 'Recuperacao de acesso invalida.' }
+          node --test tests/portal-auth.test.cjs
+          if ($LASTEXITCODE) { throw 'Falha na recuperacao da conta administradora.' }
           node --test tests/certificate-ui.test.cjs
           if ($LASTEXITCODE) { throw 'Regressao da interface do certificado.' }
           node --test tests/access-edge.test.cjs

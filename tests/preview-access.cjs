@@ -24,6 +24,9 @@ const db=new PGlite();
    let raw='';req.on('data',c=>raw+=c);req.on('end',()=>{serial=serial.then(async()=>{
     try{const p=JSON.parse(raw||'{}');const route=req.url.slice('/qa-supabase'.length);
      if(route.startsWith('/auth/v1/token')){if(p.email!=='administracao@vf.exemplo.invalid'||p.password!=='Demonstracao-2026')return respond(400,{error:'Credencial fictícia incorreta.'});return respond(200,{access_token:'demo-admin',refresh_token:'demo-refresh',expires_in:3600});}
+     if(route==='/auth/v1/recover')return respond(200,{});
+     if(route==='/auth/v1/verify')return p.token==='12345678'?respond(200,{access_token:'demo-recovery',user:{email:p.email},expires_in:600}):respond(403,{code:'otp_expired'});
+     if(route==='/auth/v1/user'&&req.headers.authorization==='Bearer demo-recovery')return respond(200,{id:admin,email:'administracao@vf.exemplo.invalid'});
      if(req.headers.authorization!=='Bearer demo-admin')return respond(401,{error:'Entre na demonstração.'});
      const name=route.split('/').at(-1);if(!['vf_client_state','vf_admin_list','vf_admin_change'].includes(name))return respond(400,{error:'RPC não disponível na demonstração.'});
      await db.exec('set role authenticated');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[admin]);
@@ -33,12 +36,13 @@ const db=new PGlite();
   }
   if(req.url==='/config.json')return respond(200,{url:'https://abcdefghijklmnopqrst.supabase.co',publishable_key:'sb_publishable_demo-not-a-real-key-123456789'});
   const name=req.url.split('?')[0]==='/'?'index.html':req.url.split('?')[0].slice(1);
-  if(!['index.html','app.js','style.css','favicon.svg'].includes(name))return respond(404,'Não encontrado.','text/plain');
+  if(!['index.html','app.js','auth.js','style.css','favicon.svg'].includes(name))return respond(404,'Não encontrado.','text/plain');
   let file=fs.readFileSync(path.join(ROOT,'portal',name));
+  if(name==='auth.js')file=Buffer.from(file.toString().replace('transport(config.url+path',"transport('/qa-supabase'+path"));
   if(name==='app.js')file=Buffer.from(file.toString().replace('fetch(config.url+path','fetch(\'/qa-supabase\'+path')
    .replace('const handlers={',"const handlers={'demo-start':async()=>{session={access_token:'demo-admin',until:Date.now()+3600000};await refresh();},")
    .replace('<form id="login">','<button type="button" class="primary" data-action="demo-start">Abrir demonstração de gestão</button><form id="login">'));
   if(name==='index.html')file=Buffer.from(file.toString().replace('<body>','<body><div style="padding:7px;background:#dce9bd;text-align:center;font:12px Segoe UI;color:#314c2e">DEMONSTRAÇÃO · dados fictícios · nenhuma alteração em clientes reais</div>'));
-  respond(200,file,({'index.html':'text/html; charset=utf-8','app.js':'text/javascript','style.css':'text/css','favicon.svg':'image/svg+xml'})[name]);
+  respond(200,file,({'index.html':'text/html; charset=utf-8','app.js':'text/javascript','auth.js':'text/javascript','style.css':'text/css','favicon.svg':'image/svg+xml'})[name]);
  }).listen(port,'0.0.0.0',()=>process.stdout.write('Demonstração isolada na porta '+port+'\n'));
 })();

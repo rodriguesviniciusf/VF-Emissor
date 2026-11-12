@@ -37,6 +37,8 @@ try {
   if ($Access.Content -notmatch 'function accessHome') { throw 'Interface de acesso ausente.' }
   $Portal = Invoke-WebRequest http://127.0.0.1:8788/gestao/
   if ($Portal.Content -notmatch 'id="app"') { throw 'Painel de acesso ausente.' }
+  $PortalAuth = Invoke-WebRequest http://127.0.0.1:8788/gestao/auth.js
+  if ($PortalAuth.Content -notmatch 'createRecovery') { throw 'Recuperacao de acesso ausente no painel.' }
   $Ncm = Invoke-WebRequest http://127.0.0.1:8788/ncm-ui.js
   if ($Ncm.Content -notmatch 'function attachNcmFields') { throw 'Consulta NCM ausente na instalacao.' }
   $NcmStyle = Invoke-WebRequest http://127.0.0.1:8788/ncm.css

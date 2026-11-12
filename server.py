@@ -579,7 +579,7 @@ class Handler(BaseHTTPRequestHandler):
             if u.path=='/gestao/config.json':
                 if not access_manager().enabled:return self.reply(dict(error='Configuração pendente.'),status=404)
                 return self.reply(access_manager().config)
-            if u.path in ('/gestao/','/gestao/app.js','/gestao/style.css','/gestao/favicon.svg'):
+            if u.path in ('/gestao/','/gestao/app.js','/gestao/auth.js','/gestao/style.css','/gestao/favicon.svg'):
                 f=ROOT/'portal'/('index.html' if u.path=='/gestao/' else u.path.split('/')[-1])
                 return self.reply(f.read_bytes(),mimetypes.guess_type(f)[0] or 'text/plain',portal=True)
             if u.path=='/municipios.json':return self.reply((ROOT/'base/assets/municipios.json').read_bytes())
