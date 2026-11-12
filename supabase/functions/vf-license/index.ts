@@ -19,26 +19,45 @@ async function rpc(name: string, body: unknown, token: string) {
  if (!r.ok) throw new Error(value.message || 'Operação não autorizada.');
  return value;
 }
+let runtimeCache: {signing_key:string,portal_origins:string[]}|null=null;
+let runtimeAt=0;
+async function runtimeConfig(){
+ if(env('VF_LICENSE_PRIVATE_KEY')&&env('VF_PORTAL_ORIGINS'))return {signing_key:env('VF_LICENSE_PRIVATE_KEY'),portal_origins:env('VF_PORTAL_ORIGINS').split(',').map(s=>s.trim()).filter(Boolean)};
+ if(runtimeCache&&Date.now()-runtimeAt<60000)return runtimeCache;
+ const key=env('SUPABASE_SERVICE_ROLE_KEY');
+ if(!key)throw new Unavailable('Serviço de licenças ainda não configurado.');
+ const r=await remote(env('SUPABASE_URL')+'/rest/v1/rpc/vf_runtime_config',{method:'POST',headers:{apikey:key,Authorization:'Bearer '+key,'Content-Type':'application/json'},body:'{}'});
+ if(!r.ok)throw new Unavailable('Configuração protegida indisponível.');
+ const d=await r.json();if(!d.signing_key||!Array.isArray(d.portal_origins))throw new Unavailable('Serviço de licenças ainda não configurado.');
+ runtimeCache=d;runtimeAt=Date.now();return d as {signing_key:string,portal_origins:string[]};
+}
 Deno.serve(async (req: Request) => {
  const origin=req.headers.get('Origin')||'';
- const allowed=env('VF_PORTAL_ORIGINS').split(',').map(s=>s.trim()).filter(Boolean);
+ try {
+ const runtime=await runtimeConfig();
+ const allowed=runtime.portal_origins;
  if(origin&&!allowed.includes(origin))return json({error:'Origem não autorizada.'},403);
  if(req.method==='OPTIONS')return new Response(null,{status:204,headers:{'Access-Control-Allow-Origin':origin,
   'Access-Control-Allow-Headers':'authorization,apikey,content-type','Access-Control-Allow-Methods':'POST','Vary':'Origin'}});
  if(req.method!=='POST')return json({error:'Método inválido.'},405,origin);
- try {
+  const raw=await req.text();if(raw.length>8192)return json({error:'Requisição muito grande.'},413,origin);
+  const p=JSON.parse(raw);
+  if(p.action==='public_key'){
+   const keyData=Uint8Array.from(atob(runtime.signing_key),c=>c.charCodeAt(0));
+   const key=await crypto.subtle.importKey('pkcs8',keyData,{name:'Ed25519'},true,['sign']);
+   const jwk=await crypto.subtle.exportKey('jwk',key);
+   const publicBytes=Uint8Array.from(atob(jwk.x!.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+   return json({verification_key:b64(publicBytes)},200,origin);
+  }
   const token=req.headers.get('Authorization')||'';
   if(!token.startsWith('Bearer '))return json({error:'Entre na sua conta.'},401,origin);
   const auth=await remote(env('SUPABASE_URL')+'/auth/v1/user',{headers:{apikey:env('SUPABASE_ANON_KEY'),Authorization:token}});
   if(!auth.ok)return json({error:'Sessão inválida. Entre novamente.'},401,origin);
   const user=await auth.json();
-  const raw=await req.text();if(raw.length>8192)return json({error:'Requisição muito grande.'},413,origin);
-  const p=JSON.parse(raw);
   if(p.action==='license'){
    const payload=await rpc('vf_license_snapshot',{license_value:p.license_id,installation_value:p.installation_id,computer_label:String(p.label||'Computador')},token);
    if(payload.sub!==user.id)throw new Error('Identidade divergente.');
-   if(!env('VF_LICENSE_PRIVATE_KEY'))throw new Unavailable('Serviço de licenças ainda não configurado.');
-   const keyData=Uint8Array.from(atob(env('VF_LICENSE_PRIVATE_KEY')),c=>c.charCodeAt(0));
+   const keyData=Uint8Array.from(atob(runtime.signing_key),c=>c.charCodeAt(0));
    const key=await crypto.subtle.importKey('pkcs8',keyData,{name:'Ed25519'},false,['sign']);
    const bytes=new TextEncoder().encode(JSON.stringify(payload));
    const signature=await crypto.subtle.sign('Ed25519',key,bytes);

@@ -196,4 +196,62 @@ end; $$;
 
 revoke all on function public.vf_is_admin(),public.vf_on_signup(),public.vf_client_state(),public.vf_valid_cnpj(text),public.vf_next_expiry(date,date,int),public.vf_request_company(text,text),public.vf_admin_list(),public.vf_admin_change(jsonb),public.vf_admin_recovery_audit(uuid,uuid),public.vf_license_snapshot(uuid,uuid,text) from public,anon,authenticated;
 grant execute on function public.vf_is_admin(),public.vf_client_state(),public.vf_request_company(text,text),public.vf_admin_list(),public.vf_admin_change(jsonb),public.vf_admin_recovery_audit(uuid,uuid),public.vf_license_snapshot(uuid,uuid,text) to authenticated;
+
+-- Implementações privilegiadas fora dos esquemas expostos; RPCs públicas são invoker.
+create schema vf_private;
+revoke all on schema vf_private from public,anon;
+grant usage on schema vf_private to authenticated,service_role;
+alter function public.vf_on_signup() set schema vf_private;
+alter function public.vf_is_admin() set schema vf_private;
+create function public.vf_is_admin() returns boolean language sql security invoker set search_path='' as $$ select vf_private.vf_is_admin(); $$;
+revoke all on function public.vf_is_admin() from public,anon,authenticated;
+grant execute on function public.vf_is_admin() to authenticated;
+grant execute on function vf_private.vf_is_admin() to authenticated;
+alter function public.vf_client_state() set schema vf_private;
+create function public.vf_client_state() returns jsonb language sql security invoker set search_path='' as $$ select vf_private.vf_client_state(); $$;
+revoke all on function public.vf_client_state() from public,anon,authenticated;
+grant execute on function public.vf_client_state() to authenticated;
+grant execute on function vf_private.vf_client_state() to authenticated;
+alter function public.vf_request_company(text, text) set schema vf_private;
+create function public.vf_request_company(cnpj_value text, company_name text) returns jsonb language sql security invoker set search_path='' as $$ select vf_private.vf_request_company(cnpj_value,company_name); $$;
+revoke all on function public.vf_request_company(text, text) from public,anon,authenticated;
+grant execute on function public.vf_request_company(text, text) to authenticated;
+grant execute on function vf_private.vf_request_company(text, text) to authenticated;
+alter function public.vf_admin_list() set schema vf_private;
+create function public.vf_admin_list() returns jsonb language sql security invoker set search_path='' as $$ select vf_private.vf_admin_list(); $$;
+revoke all on function public.vf_admin_list() from public,anon,authenticated;
+grant execute on function public.vf_admin_list() to authenticated;
+grant execute on function vf_private.vf_admin_list() to authenticated;
+alter function public.vf_admin_change(jsonb) set schema vf_private;
+create function public.vf_admin_change(p jsonb) returns jsonb language sql security invoker set search_path='' as $$ select vf_private.vf_admin_change(p); $$;
+revoke all on function public.vf_admin_change(jsonb) from public,anon,authenticated;
+grant execute on function public.vf_admin_change(jsonb) to authenticated;
+grant execute on function vf_private.vf_admin_change(jsonb) to authenticated;
+alter function public.vf_admin_recovery_audit(uuid, uuid) set schema vf_private;
+create function public.vf_admin_recovery_audit(user_value uuid, operation_value uuid) returns jsonb language sql security invoker set search_path='' as $$ select vf_private.vf_admin_recovery_audit(user_value,operation_value); $$;
+revoke all on function public.vf_admin_recovery_audit(uuid, uuid) from public,anon,authenticated;
+grant execute on function public.vf_admin_recovery_audit(uuid, uuid) to authenticated;
+grant execute on function vf_private.vf_admin_recovery_audit(uuid, uuid) to authenticated;
+alter function public.vf_license_snapshot(uuid, uuid, text) set schema vf_private;
+create function public.vf_license_snapshot(license_value uuid, installation_value uuid, computer_label text) returns jsonb language sql security invoker set search_path='' as $$ select vf_private.vf_license_snapshot(license_value,installation_value,computer_label); $$;
+revoke all on function public.vf_license_snapshot(uuid, uuid, text) from public,anon,authenticated;
+grant execute on function public.vf_license_snapshot(uuid, uuid, text) to authenticated;
+grant execute on function vf_private.vf_license_snapshot(uuid, uuid, text) to authenticated;
+
+create table vf_private.runtime_settings (
+ singleton boolean primary key default true check(singleton),
+ allowed_origins text[] not null default array['http://127.0.0.1:8787','http://localhost:8787']
+);
+alter table vf_private.runtime_settings enable row level security;
+revoke all on vf_private.runtime_settings from public,anon,authenticated;
+insert into vf_private.runtime_settings(singleton) values(true);
+create function vf_private.vf_runtime_config() returns jsonb language plpgsql security definer set search_path='' as $$
+begin
+ return jsonb_build_object('signing_key',(select decrypted_secret from vault.decrypted_secrets where name='vf_emissor_license_ed25519'),
+  'portal_origins',(select to_jsonb(allowed_origins) from vf_private.runtime_settings where singleton));
+end; $$;
+create function public.vf_runtime_config() returns jsonb language sql security invoker set search_path='' as $$ select vf_private.vf_runtime_config(); $$;
+revoke all on function vf_private.vf_runtime_config(),public.vf_runtime_config() from public,anon,authenticated;
+grant execute on function vf_private.vf_runtime_config(),public.vf_runtime_config() to service_role;
+revoke all on sequence public.vf_audit_id_seq from public,anon,authenticated;
 commit;

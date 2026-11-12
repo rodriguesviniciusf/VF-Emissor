@@ -5,7 +5,7 @@ const {PGlite}=require(process.env.VF_PGLITE_PATH||'@electric-sql/pglite');
 const ROOT=path.resolve(__dirname,'..'),admin='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const db=new PGlite();
 (async()=>{
- await db.exec(`create role anon;create role authenticated;create schema auth;create table auth.users(id uuid primary key,email text,raw_user_meta_data jsonb default '{}'::jsonb);create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema public,auth to anon,authenticated;grant execute on function auth.uid() to anon,authenticated;`);
+ await db.exec(`create role service_role;create role anon;create role authenticated;create schema auth;create table auth.users(id uuid primary key,email text,raw_user_meta_data jsonb default '{}'::jsonb);create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema public,auth to anon,authenticated;grant execute on function auth.uid() to anon,authenticated;`);
  await db.exec(fs.readFileSync(path.join(ROOT,'supabase/migrations/202611120001_access.sql'),'utf8'));
  await db.query('insert into auth.users(id,email,raw_user_meta_data) values($1,$2,$3)',[admin,'administracao@vf.exemplo.invalid',{name:'Administração de demonstração'}]);
  await db.query('insert into vf_admins values($1)',[admin]);

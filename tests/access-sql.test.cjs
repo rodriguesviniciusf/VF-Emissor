@@ -5,7 +5,7 @@ const {randomUUID}=require('node:crypto');
 test('Aprovação, isolamento, renovação e dispositivos no PostgreSQL',async t=>{
  const db=new PGlite();
  try{
- await db.exec(`create role anon; create role authenticated; create schema auth;
+ await db.exec(`create role service_role;create role anon; create role authenticated; create schema auth;
  create table auth.users(id uuid primary key,email text,raw_user_meta_data jsonb default '{}'::jsonb);
  create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
  grant usage on schema public,auth to anon,authenticated;
@@ -28,6 +28,7 @@ test('Aprovação, isolamento, renovação e dispositivos no PostgreSQL',async t
  let la,lb;
  await t.test('metadata do usuário não concede aprovação nem papel administrador',async()=>{const p=(await as(a,'select vf_client_state() as result'))[0].result;assert.equal(p.status,'pending');assert.equal(p.is_admin,false);});
  await t.test('anônimo não executa RPC e usuário não consulta tabelas',async()=>{await assert.rejects(()=>as(null,'select vf_client_state()',[],'anon'),/permission denied/);for(const table of ['vf_admins','vf_accounts','vf_licenses','vf_devices','vf_audit'])await assert.rejects(()=>as(a,'select * from '+table),/permission denied/);});
+ await t.test('configuração protegida não pode ser lida por cliente nem anônimo',async()=>{await assert.rejects(()=>as(null,'select public.vf_runtime_config()',[],'anon'),/permission denied/);await assert.rejects(()=>as(a,'select public.vf_runtime_config()'),/permission denied/);await assert.rejects(()=>as(a,'select * from vf_private.runtime_settings'),/permission denied/);const publicDefiners=await raw("select p.proname from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname like 'vf_%' and p.prosecdef");assert.deepEqual(publicDefiners,[]);});
  await t.test('não administrador não aprova nem vê painel',async()=>{await assert.rejects(()=>as(a,'select vf_admin_list()'),/exclusivo/);await assert.rejects(()=>rpc(a,'vf_admin_change',{id:a,action:'account_approve',operation_id:randomUUID()}),/exclusivo/);await assert.rejects(()=>as(a,'insert into vf_admins values($1)',[a]),/permission denied/);});
  await t.test('CNPJ válido e solicitações separadas por conta',async()=>{await assert.rejects(()=>request(a,'11111111111111'),/Confira/);la=await request(a);lb=await request(b);assert.notEqual(la,lb);assert.equal(await request(a),la);});
  await t.test('pendentes só veem a própria solicitação e não ativam emissão',async()=>{const p=(await as(a,'select vf_client_state() as result'))[0].result;assert.equal(p.companies.length,1);assert.equal(p.companies[0].id,la);await assert.rejects(()=>snapshot(a,la),/aprovação/);await assert.rejects(()=>snapshot(a,lb),/não autorizada/);});
