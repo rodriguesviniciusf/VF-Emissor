@@ -1,0 +1,20 @@
+name: Conferir atualizacao publica para clientes anteriores
+on:
+  push:
+    branches: ['main']
+    paths: ['.github/workflows/verify-updates.yml', 'scripts/verify_published_update.py']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  published-update:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+          architecture: x64
+      - name: Conferir versao, manifesto e download pelo atualizador real
+        shell: pwsh
+        run: python .\scripts\verify_published_update.py
