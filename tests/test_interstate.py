@@ -11,7 +11,7 @@ from fiscal_events import EventStore
 from note_validation import validate_note
 
 CITIES={}
-for code,name,uf in json.loads((ROOT/'base/assets/municipios.json').read_text())['municipalities']:CITIES.setdefault(uf,(code,name))
+for code,name,uf in json.loads((ROOT/'base/assets/municipios.json').read_text(encoding='utf-8'))['municipalities']:CITIES.setdefault(uf,(code,name))
 
 class InterstateTests(unittest.TestCase):
  @classmethod
