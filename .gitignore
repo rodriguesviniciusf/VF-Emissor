@@ -13,6 +13,12 @@ dist/
 *.exe.part
 VF-Emissor-Setup-*.exe
 *.zip
+.env
+.env.*
+*.pem
+*.key
+commercial-config.json
+portal/config.json
 
 !portable/python312.zip
 

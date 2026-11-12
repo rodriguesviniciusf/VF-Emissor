@@ -29,6 +29,64 @@ ALLOW_REMOTE = False
 SESSIONS = {}
 VAULT_ERRORS = {}
 HTTPD = None
+ACCESS = None
+ACCESS_STORE = None
+
+def access_manager():
+    global ACCESS,ACCESS_STORE
+    if ACCESS is None or ACCESS_STORE is not STORE:
+        from cloud_access import Access
+        ACCESS=Access(ROOT,STORE.path.parent);ACCESS_STORE=STORE
+    return ACCESS
+
+def access_state(session):
+    manager=access_manager()
+    state=dict(version=VERSION,authenticated=False,cid='',companies=[],csrf=CSRF,preview=PREVIEW,
+               access=dict(enabled=True,account=None,license=None))
+    if not session or 'user_id' not in session:return state
+    profile=manager.profile(session);state['access']['account']=profile
+    if session.get('cid'):
+        license=manager.require(session,company(session['cid'])['CNPJCPF'])
+        state.update(get_state(session['cid']));state['access']=dict(enabled=True,account=profile,license=license)
+    return state
+
+def access_action(p,session):
+    manager=access_manager();cmd=p.get('action')
+    if cmd=='configure':
+        result=manager.configure(p['config']);SESSIONS.clear();return result,None
+    if cmd in ('login','signup'):
+        new_session=manager.login(p) if cmd=='login' else manager.signup(p)
+        token=secrets.token_urlsafe(32);SESSIONS[token]=new_session
+        return dict(ok=True),token
+    if cmd=='finish_recovery':return manager.recover(p),None
+    if not session or 'user_id' not in session:raise ValueError('Entre com seu e-mail e senha.')
+    if cmd=='home':session.update(cid='',license_id='');return dict(ok=True),None
+    if cmd=='profile':return manager.profile(session,force=True),None
+    if cmd=='request_company':return manager.rpc(session,'vf_request_company',{'cnpj_value':document(p.get('cnpj','')),'company_name':p.get('name','')}),None
+    if cmd=='select':
+        license=manager.lease(session,str(p['id']),force=True)
+        cid=next((co['_id'] for co in rows('company') if document(co['CNPJCPF'])==license['cnpj']),None)
+        created=not bool(cid)
+        if not cid:
+            cid=STORE.save('company',dict(CNPJCPF=license['cnpj'],xNome=license['name'],UF='AL',CRT='1',environment='2',
+                production_enabled=False,series='1',next_number='1',production_series='1',production_next_number='1'),'')
+        session.update(cid=cid,license_id=license['license_id'])
+        return dict(ok=True,cid=cid,created=created),None
+    raise ValueError('Ação de acesso desconhecida.')
+
+def guard_access(p,session):
+    if not session or 'user_id' not in session or not session.get('cid'):raise ValueError('Selecione uma empresa aprovada em Minhas empresas.')
+    cid=session['cid'];co=company(cid)
+    emitting=p.get('action') in ('prepare','send','inutil_prepare')
+    if p.get('action')=='event_send':
+        emitting=EventStore(STORE).get(cid,p.get('id','')).get('kind')=='INUT'
+    access_manager().require(session,co['CNPJCPF'],emitting=emitting)
+    if p.get('cid') and p['cid']!=cid:raise ValueError('A empresa mudou. Atualize a tela antes de continuar.')
+    if p.get('action')=='save_catalog' and p.get('kind')=='company':
+        if p.get('id')!=cid or document(p.get('data',{}).get('CNPJCPF',''))!=document(co['CNPJCPF']):
+            raise ValueError('Adicione ou solicite outro CNPJ pela tela Minhas empresas.')
+    if p.get('action')=='import_legacy':raise ValueError('A importação inicial é feita antes de ativar o acesso comercial.')
+    p['cid']=cid
 
 def hash_password(password: str, salt: str | None = None) -> str:
     if not salt: salt = secrets.token_hex(16)
@@ -493,13 +551,21 @@ class Handler(BaseHTTPRequestHandler):
             SESSIONS.pop(v.value, None)
             return None
         return sess['cid']
-    def reply(self, data, mime='application/json; charset=utf-8', status=200, filename=None, session=False):
+    def get_access_session(self):
+        cookie=SimpleCookie()
+        try:cookie.load(self.headers.get('Cookie',''))
+        except Exception:return None
+        value=cookie.get('vf_company_session');sess=SESSIONS.get(value.value) if value else None
+        if not sess or sess.get('expires',0)<time.time():return None
+        return sess
+    def reply(self, data, mime='application/json; charset=utf-8', status=200, filename=None, session=False, portal=False):
         if not isinstance(data, bytes): data = json.dumps(data, ensure_ascii=False).encode('utf8')
         self.send_response(status)
         self.send_header('Content-Type', mime); self.send_header('Content-Length', str(len(data)))
         self.send_header('Cache-Control', 'no-store'); self.send_header('X-Content-Type-Options', 'nosniff')
         self.send_header('Referrer-Policy', 'no-referrer'); self.send_header('X-Frame-Options', 'DENY')
-        self.send_header('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; form-action 'self'")
+        connect="'self' https://*.supabase.co" if portal else "'self'"
+        self.send_header('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src "+connect+"; frame-ancestors 'none'; form-action 'self'")
         if filename: self.send_header('Content-Disposition', 'attachment; filename="'+filename+'"')
         if session: self.send_header('Set-Cookie', 'vf_session='+RUN_TOKEN+'; HttpOnly; SameSite=Strict; Path=/')
         self.end_headers(); self.wfile.write(data)
@@ -507,16 +573,29 @@ class Handler(BaseHTTPRequestHandler):
         if not self.valid_host(): return self.reply(dict(error='Host inválido.'), status=403)
         u = urlparse(self.path); q = parse_qs(u.query)
         try:
+            if u.path=='/gestao/config.json':
+                if not access_manager().enabled:return self.reply(dict(error='Configuração pendente.'),status=404)
+                return self.reply(access_manager().config)
+            if u.path in ('/gestao/','/gestao/app.js','/gestao/style.css','/gestao/favicon.svg'):
+                f=ROOT/'portal'/('index.html' if u.path=='/gestao/' else u.path.split('/')[-1])
+                return self.reply(f.read_bytes(),mimetypes.guess_type(f)[0] or 'text/plain',portal=True)
             if u.path=='/municipios.json':return self.reply((ROOT/'base/assets/municipios.json').read_bytes())
-            if u.path in ('/', '/interstate-ui.js', '/interstate.css', '/ncm-ui.js', '/ncm.css', '/simple-ui.js', '/simple.css', '/assistance-ui.js', '/assistance.css', '/app.js', '/normal-ui.js', '/product-ui.js', '/settings-ui.js', '/desktop-ui.js', '/workspace-ui.js', '/workspace.css', '/business-ui.js', '/business.css', '/style.css', '/favicon.svg'):
+            if u.path in ('/', '/access-ui.js','/access.css', '/interstate-ui.js', '/interstate.css', '/ncm-ui.js', '/ncm.css', '/simple-ui.js', '/simple.css', '/assistance-ui.js', '/assistance.css', '/app.js', '/normal-ui.js', '/product-ui.js', '/settings-ui.js', '/desktop-ui.js', '/workspace-ui.js', '/workspace.css', '/business-ui.js', '/business.css', '/style.css', '/favicon.svg'):
                 f = ROOT/'static'/('index.html' if u.path=='/' else u.path[1:])
                 return self.reply(f.read_bytes(), mimetypes.guess_type(f)[0] or 'text/plain', session=u.path=='/')
             if u.path == '/health': return self.reply(dict(app='VF Emissor Web', version=VERSION))
             if not self.authorized(): return self.reply(dict(error='Reabra a página do aplicativo.'), status=401)
+            if access_manager().enabled:
+                session=self.get_access_session()
+                if u.path=='/api/state':return self.reply(access_state(session))
+                if not session or 'user_id' not in session or not session.get('cid'):raise ValueError('Entre e selecione uma empresa aprovada.')
+                access_manager().require(session,company(session['cid'])['CNPJCPF'])
             active_cid = self.get_company_session()
             if not active_cid and PREVIEW:
                 active_cid = q.get('cid', [''])[0]
-            if u.path == '/api/state': return self.reply(get_state(active_cid or ''))
+            if u.path == '/api/state':
+                state=get_state(active_cid or '');state['access']=dict(enabled=False)
+                return self.reply(state)
             cid = active_cid or ''
             if u.path == '/api/download':
                 kind=q['kind'][0]; rid=q.get('id',[''])[0]
@@ -589,9 +668,28 @@ class Handler(BaseHTTPRequestHandler):
         if not self.valid_host() or not self.authorized(): return self.reply(dict(error='Sessão inválida.'),status=403)
         origin=self.headers.get('Origin')
         if origin and urlparse(origin).netloc != self.headers.get('Host'): return self.reply(dict(error='Origem inválida.'),status=403)
-        if self.path == '/api/login':
+        if self.path=='/api/access':
+            if self.headers.get('Sec-Fetch-Site')=='cross-site' or not secrets.compare_digest(self.headers.get('X-VF-CSRF',''),CSRF):return self.reply(dict(error='Recarregue a página.'),status=403)
             try:
                 size=int(self.headers.get('Content-Length','0'))
+                if not 0<size<=8192:raise ValueError('Solicitação de acesso muito grande.')
+                p=json.loads(self.rfile.read(size))
+                if p.get('action')=='configure' and rows('company') and not self.get_company_session():raise ValueError('Entre em uma empresa local antes de ativar o novo acesso.')
+                value,token=access_action(p,self.get_access_session())
+                if token:
+                    # Não devolver o token Supabase nem o cookie de sessão no JSON.
+                    self.send_response(200);raw=json.dumps(value,ensure_ascii=False).encode('utf-8')
+                    self.send_header('Set-Cookie','vf_company_session='+token+'; HttpOnly; SameSite=Strict; Path=/')
+                    self.send_header('Content-Type','application/json; charset=utf-8');self.send_header('Cache-Control','no-store')
+                    self.send_header('Content-Length',str(len(raw)));self.end_headers();self.wfile.write(raw);return
+                return self.reply(value)
+            except (ValueError,KeyError,TypeError) as exc:return self.reply(dict(error=str(exc)),status=400)
+            except Exception:return self.reply(dict(error='Não foi possível concluir o acesso. Contate o suporte.'),status=500)
+        if self.path == '/api/login':
+            try:
+                if access_manager().enabled:raise ValueError('Use seu e-mail e senha na nova tela de acesso.')
+                size=int(self.headers.get('Content-Length','0'))
+                if not 0<size<=8192:raise ValueError('Solicitação de acesso muito grande.')
                 p=json.loads(self.rfile.read(size))
                 res=handle_login(p)
                 cookie_hdr = 'vf_company_session=' + res['token'] + '; HttpOnly; SameSite=Lax; Path=/'
@@ -629,7 +727,11 @@ class Handler(BaseHTTPRequestHandler):
             session_cid = self.get_company_session()
             registering=p.get('action')=='save_catalog' and p.get('kind')=='company' and not p.get('id')
             importing=p.get('action')=='import_legacy'
-            if not PREVIEW:
+            if access_manager().enabled:
+                guard_access(p,self.get_access_session())
+                expected_company=self.headers.get('X-VF-Company','')
+                if expected_company and expected_company!=p['cid']:return self.reply(dict(error='A empresa mudou. Atualize a tela.'),status=409)
+            elif not PREVIEW:
                 if not session_cid and not (registering or importing or p.get('action') in ('shutdown','lookup_public')):return self.reply(dict(error='Entre na empresa para continuar.'),status=401)
                 if session_cid and p.get('action')=='save_catalog' and p.get('kind')=='company' and p.get('id') and p['id']!=session_cid:return self.reply(dict(error='Cadastro pertence a outra empresa.'),status=403)
                 expected_company=self.headers.get('X-VF-Company','')

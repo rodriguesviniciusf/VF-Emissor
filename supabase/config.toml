@@ -1,0 +1,3 @@
+[functions.vf-license]
+# A função valida o bearer diretamente em /auth/v1/user, inclusive chaves assimétricas.
+verify_jwt = false

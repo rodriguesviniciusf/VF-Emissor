@@ -1,9 +1,9 @@
 {
   "name": "vf-emissor-web-local",
-  "version": "0.18.0",
+  "version": "0.19.0",
   "private": true,
   "scripts": {
     "dev": "python3 launch_preview.py",
-    "check": "node --check static/app.js && node --check static/normal-ui.js && node --check static/product-ui.js && node --check static/settings-ui.js && node --check static/desktop-ui.js && node --check static/workspace-ui.js && node --check static/business-ui.js && python3 -m py_compile server.py && node --check static/assistance-ui.js && node --check static/simple-ui.js && python3 -m py_compile base/simple_mode.py && node --test tests/certificate-ui.test.cjs && node --check static/ncm-ui.js && python3 -m py_compile base/ncm_catalog.py base/nature_catalog.py && node --check static/interstate-ui.js && python3 -m py_compile base/interstate.py"
+    "check": "node --check static/app.js && node --check static/normal-ui.js && node --check static/product-ui.js && node --check static/settings-ui.js && node --check static/desktop-ui.js && node --check static/workspace-ui.js && node --check static/business-ui.js && python3 -m py_compile server.py && node --check static/assistance-ui.js && node --check static/simple-ui.js && python3 -m py_compile base/simple_mode.py && node --test tests/certificate-ui.test.cjs && node --check static/ncm-ui.js && python3 -m py_compile base/ncm_catalog.py base/nature_catalog.py && node --check static/interstate-ui.js && python3 -m py_compile base/interstate.py && node --check static/access-ui.js && node --check portal/app.js && python3 -m py_compile base/cloud_access.py"
   }
 }

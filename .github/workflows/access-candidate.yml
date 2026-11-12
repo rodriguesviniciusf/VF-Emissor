@@ -1,0 +1,55 @@
+name: Validar acesso comercial e instalador candidato
+on:
+  push:
+    branches: ['access-019']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  candidate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+          architecture: x64
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Preparar Python embarcado
+        shell: pwsh
+        run: python .\scripts\bootstrap_windows.py
+      - name: Conferir emissor e acesso comercial
+        shell: pwsh
+        run: |
+          & .\portable\python.exe -m unittest discover -s base -p 'test_*.py'
+          if ($LASTEXITCODE) { throw 'Falha nos testes do motor.' }
+          & .\portable\python.exe -m unittest discover -s tests -p 'test_*.py'
+          if ($LASTEXITCODE) { throw 'Falha nos testes web/desktop.' }
+          Get-ChildItem static/*.js | ForEach-Object { node --check $_.FullName; if ($LASTEXITCODE) { throw 'JavaScript invalido.' } }
+          node --check portal/app.js
+          if ($LASTEXITCODE) { throw 'Painel administrativo invalido.' }
+          node --test tests/certificate-ui.test.cjs
+          if ($LASTEXITCODE) { throw 'Regressao da interface do certificado.' }
+          node --test tests/access-edge.test.cjs
+          if ($LASTEXITCODE) { throw 'Falha nas verificacoes da Edge Function.' }
+          $deps = Join-Path $env:RUNNER_TEMP 'vf-sql-tests'
+          npm install --prefix $deps @electric-sql/pglite@0.5.16
+          if ($LASTEXITCODE) { throw 'Falha ao preparar PostgreSQL de teste.' }
+          $env:VF_PGLITE_PATH = Join-Path $deps 'node_modules/@electric-sql/pglite'
+          node --test tests/access-sql.test.cjs
+          if ($LASTEXITCODE) { throw 'Falha nas regras SQL e permissoes.' }
+      - name: Instalar compilador
+        shell: pwsh
+        run: choco install nsis --no-progress -y
+      - name: Compilar e conferir instalacao da candidata
+        shell: pwsh
+        run: |
+          .\scripts\build-release.ps1 -Repository "$env:GITHUB_REPOSITORY"
+          .\scripts\smoke-install.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: VF-Emissor-Candidata-0.19.0
+          path: dist/*
+      # Sem publicacao estavel e sem atualizar latest: requer implantacao real e homologacao.

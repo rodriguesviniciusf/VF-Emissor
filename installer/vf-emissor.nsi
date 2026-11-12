@@ -4,7 +4,7 @@ Unicode true
 !include "FileFunc.nsh"
 !include "x64.nsh"
 !ifndef VERSION
- !define VERSION "0.18.0"
+ !define VERSION "0.19.0"
 !endif
 !ifndef SOURCE
  !define SOURCE ".."
@@ -68,7 +68,7 @@ FunctionEnd
 Section "VF Emissor" SEC_APP
   SetShellVarContext current
   SetOutPath "$INSTDIR"
-  File /r /x dados /x Dados /x __pycache__ /x .git /x .github /x installer /x scripts /x tests /x dist /x *.pyc /x *.pfx /x *.p12 /x *.sqlite3 /x *.db /x *.exe.part "${SOURCE}\*.*"
+  File /r /x dados /x Dados /x __pycache__ /x .git /x .github /x installer /x scripts /x tests /x supabase /x dist /x *.pyc /x *.pfx /x *.p12 /x *.pem /x *.key /x .env* /x *.sqlite3 /x *.db /x *.exe.part "${SOURCE}\*.*"
   CreateDirectory "$SMPROGRAMS\VF Emissor"
   CreateShortCut "$DESKTOP\VF Emissor.lnk" "$INSTDIR\portable\pythonw.exe" '"$INSTDIR\desktop_launcher.py"' "$INSTDIR\app.ico" 0 SW_SHOWNORMAL "" "Emitir NF-e neste computador"
   CreateShortCut "$SMPROGRAMS\VF Emissor\VF Emissor.lnk" "$INSTDIR\portable\pythonw.exe" '"$INSTDIR\desktop_launcher.py"' "$INSTDIR\app.ico"

@@ -1,4 +1,13 @@
-VF Emissor 0.18.0
+VF Emissor 0.19.0 — candidata de acesso comercial
+
+- Cadastro por e-mail/senha sem confirmação automática, pendente da administração; cada CNPJ possui solicitação e validade próprias.
+- Painel com pendentes, ativos, vencimentos, vencidos, aprovar conta e empresa juntos, renovar 1/3/6/12 meses, suspender/reativar, computadores e histórico.
+- Supabase Auth, tabelas protegidas, RPCs de autorização e Edge Function com assinatura Ed25519 vinculada à instalação. Recuperação assistida por código de uso único após conferência de identidade.
+- Verificações nas rotas reais antes de preparar/transmitir; vencimento preserva consulta, XML e backup. Tokens e senha da conta não são persistidos no cliente.
+- Ativação comercial separada para preservar instalações existentes. Requer implantação e validação no projeto Supabase real; não publicou configuração, segredos ou contas de clientes.
+- Testes PostgreSQL/PGlite, HTTP, criptografia, Edge Function e regressões. Conferência visual com dados fictícios. Nenhum A1 real ou transmissão SEFAZ.
+
+Histórico — VF Emissor 0.18.0
 
 - AL → destinatários de todas as UFs brasileiras, incluindo Distrito Federal. AL → AL permanece interna; autorizador AL/SVRS e CRT 1/3 preservados.
 - Conferência de operação/CFOP, limites de ICMS interestadual, origem importada, falta/contexto do DIFAL, partilha para emissão normal 2026, valores de DIFAL/FCP e IE isenta conforme NT 2025.001 v1.03, com exceções documentadas. Erros levam ao campo do item; assinatura/envio não ignoram a conferência.

@@ -28,5 +28,5 @@ def backup_company(store,cid,cnpj,vault_file=None):
         # No Windows, os nomes do escritor ainda aberto podem ter separadores locais.
         with zipfile.ZipFile(output,'a',zipfile.ZIP_DEFLATED) as z:
             hashes={name:hashlib.sha256(z.read(name)).hexdigest() for name in z.namelist()}
-            z.writestr('backup-manifest.json',json.dumps(dict(format=2,version='0.18.0',company=cid,cnpj=cnpj,created=datetime.now(timezone.utc).isoformat(),files=hashes),ensure_ascii=False))
+            z.writestr('backup-manifest.json',json.dumps(dict(format=2,version='0.19.0',company=cid,cnpj=cnpj,created=datetime.now(timezone.utc).isoformat(),files=hashes),ensure_ascii=False))
         return output.getvalue()

@@ -33,6 +33,10 @@ try {
   if ($Interstate.Content -notmatch 'function decorateInterstate') { throw 'Assistente interestadual ausente.' }
   $InterstateStyle = Invoke-WebRequest http://127.0.0.1:8788/interstate.css
   if ($InterstateStyle.StatusCode -ne 200) { throw 'Visual interestadual ausente.' }
+  $Access = Invoke-WebRequest http://127.0.0.1:8788/access-ui.js
+  if ($Access.Content -notmatch 'function accessHome') { throw 'Interface de acesso ausente.' }
+  $Portal = Invoke-WebRequest http://127.0.0.1:8788/gestao/
+  if ($Portal.Content -notmatch 'id="app"') { throw 'Painel de acesso ausente.' }
   $Ncm = Invoke-WebRequest http://127.0.0.1:8788/ncm-ui.js
   if ($Ncm.Content -notmatch 'function attachNcmFields') { throw 'Consulta NCM ausente na instalacao.' }
   $NcmStyle = Invoke-WebRequest http://127.0.0.1:8788/ncm.css

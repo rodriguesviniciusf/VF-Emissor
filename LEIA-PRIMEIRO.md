@@ -1,4 +1,6 @@
-# VF Emissor 0.18.0 — Windows
+# VF Emissor 0.19.0 — candidata Windows
+
+Esta candidata inclui conta por e-mail/senha e painel de aprovações. Leia **ACESSO-E-ASSINATURAS.md** antes de ativar. A aprovação real exige projeto Supabase configurado e definição da conta administradora. Até lá, o acesso local anterior permanece disponível e os dados são preservados. Não é uma liberação automática do controle comercial para produção.
 
 ## Instalar e abrir
 
