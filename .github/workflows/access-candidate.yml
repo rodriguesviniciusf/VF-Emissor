@@ -54,6 +54,6 @@ jobs:
           .\scripts\smoke-install.ps1
       - uses: actions/upload-artifact@v4
         with:
-          name: VF-Emissor-Candidata-0.19.2
+          name: VF-Emissor-Candidata-0.20.0
           path: dist/*
       # Sem publicacao estavel e sem atualizar latest: requer implantacao real e homologacao.

@@ -1,3 +1,7 @@
+## Versão 0.20.0 — apresentação e movimento
+
+Login, seleção de empresas e emissor refinados na mesma paleta. Transições curtas em navegação, janelas e menus, indicador deslizante nas abas e cartões com respostas discretas. A preferência do sistema por movimento reduzido desativa os efeitos; cálculos e ações não dependem deles. Os arquivos visuais são locais e funcionam sem acessar o site de referência. Créditos em THIRD-PARTY-NOTICES.md.
+
 # VF Emissor
 
 ## Versão 0.19.2 — interface mais compacta

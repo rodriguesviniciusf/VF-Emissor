@@ -583,7 +583,7 @@ class Handler(BaseHTTPRequestHandler):
                 f=ROOT/'portal'/('index.html' if u.path=='/gestao/' else u.path.split('/')[-1])
                 return self.reply(f.read_bytes(),mimetypes.guess_type(f)[0] or 'text/plain',portal=True)
             if u.path=='/municipios.json':return self.reply((ROOT/'base/assets/municipios.json').read_bytes())
-            if u.path in ('/', '/access-ui.js','/access.css', '/interstate-ui.js', '/interstate.css', '/ncm-ui.js', '/ncm.css', '/simple-ui.js', '/simple.css', '/assistance-ui.js', '/assistance.css', '/app.js', '/normal-ui.js', '/product-ui.js', '/settings-ui.js', '/desktop-ui.js', '/workspace-ui.js', '/workspace.css', '/business-ui.js', '/business.css', '/style.css', '/favicon.svg'):
+            if u.path in ('/', '/motion-ui.js','/premium.css', '/access-ui.js','/access.css', '/interstate-ui.js', '/interstate.css', '/ncm-ui.js', '/ncm.css', '/simple-ui.js', '/simple.css', '/assistance-ui.js', '/assistance.css', '/app.js', '/normal-ui.js', '/product-ui.js', '/settings-ui.js', '/desktop-ui.js', '/workspace-ui.js', '/workspace.css', '/business-ui.js', '/business.css', '/style.css', '/favicon.svg'):
                 f = ROOT/'static'/('index.html' if u.path=='/' else u.path[1:])
                 return self.reply(f.read_bytes(), mimetypes.guess_type(f)[0] or 'text/plain', session=u.path=='/')
             if u.path == '/health': return self.reply(dict(app='VF Emissor Web', version=VERSION))

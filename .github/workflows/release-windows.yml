@@ -43,6 +43,8 @@ jobs:
           if ($LASTEXITCODE) { throw 'Regressao do certificado na interface.' }
           node --check .\static\access-ui.js
           if ($LASTEXITCODE) { throw 'Interface de acesso invalida.' }
+          node --check .\static\motion-ui.js
+          if ($LASTEXITCODE) { throw 'Interface de movimento invalida.' }
           node --check .\portal\app.js
           if ($LASTEXITCODE) { throw 'Painel administrativo invalido.' }
           node --check .\portal\auth.js

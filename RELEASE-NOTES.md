@@ -1,4 +1,14 @@
-VF Emissor 0.19.2
+VF Emissor 0.20.0
+
+- Visual refinado no login, cadastro, recuperação e escolha de empresa, mantendo a paleta verde e clara do programa.
+- Login com área de apresentação e formulário centralizado; cartões de empresas com status, validade e acesso bem definidos.
+- Entradas suaves nas telas e nos cartões, abertura de janelas e menu de assinatura, respostas ao passar o mouse e ao clicar.
+- Indicador animado nas abas do emissor e das configurações, com posicionamento ajustado ao redimensionar a janela.
+- Movimento reduzido respeita a configuração de acessibilidade do sistema. Recursos visuais locais, sem bibliotecas ou serviços externos em tempo de execução.
+- Sem animação de valores fiscais ou atraso nas ações. Cadastros, XML, certificados, aprovação e regras de emissão preservados.
+- Adaptações das receitas públicas de Transitions.dev; créditos em THIRD-PARTY-NOTICES.md.
+
+Histórico — VF Emissor 0.19.2
 
 - Títulos de login, solicitação e recuperação de acesso centralizados.
 - Empresa e CNPJ em uma área própria no cabeçalho, com botões compactos Empresas e Sair.
