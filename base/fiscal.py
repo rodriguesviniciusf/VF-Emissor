@@ -582,6 +582,9 @@ class FiscalStore:
             def comparable(data):
                 result=copy.deepcopy(data)
                 for field in ('issued_at','date','status'):result.pop(field,None)
+                # Review metadata is added only to the reserved fiscal snapshot.
+                # check_duplicates above validates that approval against current history.
+                for field in ('duplicate_approval','duplicate_reason','duplicate_reviewed_at'):result.pop(field,None)
                 result.setdefault('nature','VENDA DE MERCADORIA')
                 return result
             if comparable(current)!=comparable(snapshot['note']):raise ValueError('O rascunho foi alterado após a assinatura. Abra Editar / corrigir e assine novamente antes de enviar.')

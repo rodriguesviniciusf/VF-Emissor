@@ -1,3 +1,7 @@
+## Versão 0.20.2 — envio após justificativa
+
+Corrigido o falso aviso de alteração após assinatura ao justificar uma nova venda semelhante a outra autorizada. Notas já preparadas na 0.20.1 podem ser abertas para confirmar a transmissão, mantendo XML assinado e justificativa. Mudanças reais nos dados continuam exigindo correção e nova assinatura.
+
 ## Versão 0.20.0 — apresentação e movimento
 
 Login, seleção de empresas e emissor refinados na mesma paleta. Transições curtas em navegação, janelas e menus, indicador deslizante nas abas e cartões com respostas discretas. A preferência do sistema por movimento reduzido desativa os efeitos; cálculos e ações não dependem deles. Os arquivos visuais são locais e funcionam sem acessar o site de referência. Créditos em THIRD-PARTY-NOTICES.md.

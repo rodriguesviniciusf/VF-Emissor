@@ -1,4 +1,12 @@
-VF Emissor 0.20.1
+VF Emissor 0.20.2
+
+- Corrigido o bloqueio indevido “O rascunho foi alterado após a assinatura” após justificar uma nova operação semelhante a uma nota autorizada.
+- A conferência do rascunho separa os três campos internos da justificativa dos dados fiscais. A autorização da nova operação continua sendo validada contra os documentos existentes antes do envio.
+- Compatível com notas já preparadas na versão 0.20.1: é possível reabrir e confirmar a transmissão, sem criar outra nota ou assinar novamente quando os dados não foram alterados.
+- Alterações reais em destinatário, itens, quantidade, preço, desconto, NCM, tributação, frete, pagamento, natureza e informações adicionais continuam exigindo revisão e nova assinatura.
+- Testes com XML real e certificado sintético nos modos completo e simples, reabertura do banco e resposta SEFAZ simulada. Nenhuma nota de teste transmitida à SEFAZ.
+
+Histórico — VF Emissor 0.20.1
 
 - Corrigido o bloqueio que solicitava uma justificativa de nova operação sem oferecer campo para preenchê-la.
 - Ao preparar uma nota semelhante a outra autorizada, exibe documentos existentes, destinatário, data, ambiente e acesso aos detalhes.

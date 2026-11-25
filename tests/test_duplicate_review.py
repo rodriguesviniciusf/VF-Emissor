@@ -5,11 +5,18 @@ from unittest.mock import patch,MagicMock
 ROOT=Path(__file__).resolve().parents[1]
 sys.path[:0]=[str(ROOT),str(ROOT/'base'),str(ROOT/'tests')]
 import server,editor_recovery,simple_mode
-from fiscal import FiscalStore
+from core import Store
+from fiscal import FiscalStore,FiscalService
 from vf_workflow import check_duplicates
 import test_simple_mode as fixture
+import test_fiscal as fiscal_fixture
 
 class DuplicateReviewTests(unittest.TestCase):
+ @classmethod
+ def setUpClass(cls):
+  fiscal_fixture.FiscalTests.setUpClass();cls.cert=fiscal_fixture.FiscalTests.certificate
+ @classmethod
+ def tearDownClass(cls):fiscal_fixture.FiscalTests.tearDownClass()
  def setUp(self):
   self.old_store=server.STORE;self.fx=fixture.SimpleModeTests();self.fx.setUp();self.cid=self.fx.cid;self.db=self.fx.db
   self.n=self.fx.note();self.source=server.save_note(dict(cid=self.cid,data=self.n))['id'];original=server.note(self.cid,self.source)
@@ -56,5 +63,54 @@ class DuplicateReviewTests(unittest.TestCase):
   for field,value in [('environment','1'),('status','CANCELADA')]:
    with self.db.db:self.db.db.execute('UPDATE fiscal_documents SET environment=?,status=? WHERE id=?',('1' if field=='environment' else '2','AUTORIZADA' if field=='environment' else value,self.fid))
    self.assertEqual(self.review()['matches'],[])
+ def prepare_signed(self):
+  """Real validation, XML construction and synthetic A1 signature; no network."""
+  with patch.object(server,'certificate',return_value=self.cert),patch.object(server.ncm_catalog,'check_note',return_value={'issues':[]}),patch.object(FiscalStore,'_archive_best_effort'):
+   return server.action(self.params())
+ def send_synthetic(self,prepared):
+  fs=FiscalStore(self.db);doc=fs.get(self.cid,prepared['fiscal_id'])
+  response=fiscal_fixture.FiscalTests().fixture(doc['access_key'],doc['signed_xml'])
+  transport=MagicMock();transport.request.return_value=response
+  with patch.object(FiscalStore,'_archive_best_effort'):
+   result=FiscalService(fs,self.cert,transport).send(self.cid,prepared['fiscal_id'])
+  self.assertEqual(result,'AUTORIZADA');transport.request.assert_called_once()
+  self.assertEqual(transport.request.call_args.args[0],'send')
+  self.assertEqual(fs.get(self.cid,prepared['fiscal_id'])['status'],'AUTORIZADA')
+ def test_justified_simple_sale_sends_after_reopening_saved_0201_document(self):
+  before=server.note(self.cid,self.rid);prepared=self.prepare_signed()
+  doc=FiscalStore(self.db).get(self.cid,prepared['fiscal_id']);signed=doc['signed_xml']
+  self.assertNotIn('duplicate_reason',before)
+  self.assertIn('duplicate_reason',json.loads(doc['snapshot'])['note'])
+  self.assertEqual(server.note(self.cid,self.rid),before)
+  self.db.db.close();server.STORE=self.db=self.fx.db=Store(self.fx.path)
+  self.send_synthetic(prepared)
+  self.assertEqual(FiscalStore(self.db).get(self.cid,prepared['fiscal_id'])['signed_xml'],signed)
+  self.assertEqual(server.note(self.cid,self.rid),before)
+ def test_justified_complete_sale_sends_without_saving_review_into_draft(self):
+  n=server.note(self.cid,self.rid);n['simple_mode']['active']=False;self.db.save('note',n,self.cid,self.rid)
+  prepared=self.prepare_signed();self.send_synthetic(prepared)
+  self.assertNotIn('duplicate_reason',server.note(self.cid,self.rid))
+ def test_actual_edits_after_justified_signature_still_block_before_transport(self):
+  prepared=self.prepare_signed();original=server.note(self.cid,self.rid);fs=FiscalStore(self.db)
+  edits=[('quantity','3'),('price','101'),('discount','0'),('NCM','03061790'),('icms_code','900'),('recipient_id','another-client'),('freight','20'),('payment','01'),('nature','OUTRA OPERACAO'),('info','Informacao alterada')]
+  for field,value in edits:
+   with self.subTest(field=field):
+    n=copy.deepcopy(original)
+    if field in ('quantity','price','discount'):n['items'][0][field]=value
+    elif field=='NCM':n['items'][0]['product'][field]=value
+    elif field=='icms_code':n['items'][0]['rule'][field]=value
+    else:n[field]=value
+    self.db.save('note',n,self.cid,self.rid);transport=MagicMock()
+    with self.assertRaisesRegex(ValueError,'rascunho foi alterado'):FiscalService(fs,self.cert,transport).send(self.cid,prepared['fiscal_id'])
+    transport.request.assert_not_called();self.assertEqual(fs.get(self.cid,prepared['fiscal_id'])['status'],'PREPARADA')
+ def test_existing_justification_cannot_bypass_new_matches_or_uncertain_status(self):
+  prepared=self.prepare_signed();fs=FiscalStore(self.db);transport=MagicMock()
+  n=server.note(self.cid,self.source);n['number']='8';other=uuid.uuid4().hex;self.insert(other,'another-source',n)
+  with self.assertRaisesRegex(ValueError,'justificativa'):FiscalService(fs,self.cert,transport).send(self.cid,prepared['fiscal_id'])
+  with self.db.db:
+   self.db.db.execute('DELETE FROM fiscal_documents WHERE id=?',(other,))
+   self.db.db.execute('UPDATE fiscal_documents SET status=? WHERE id=?',('INCERTA',self.fid))
+  with self.assertRaisesRegex(ValueError,'processamento|incerta'):FiscalService(fs,self.cert,transport).send(self.cid,prepared['fiscal_id'])
+  transport.request.assert_not_called();self.assertEqual(fs.get(self.cid,prepared['fiscal_id'])['status'],'PREPARADA')
 
 if __name__=='__main__':unittest.main()
