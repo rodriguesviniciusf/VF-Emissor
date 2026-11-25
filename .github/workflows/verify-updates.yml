@@ -1,4 +1,5 @@
 name: Conferir atualizacao publica para clientes anteriores
+# Verificacao isolada para repetir o download apos uma falha temporaria de rede na publicacao.
 on:
   push:
     branches: ['main']
