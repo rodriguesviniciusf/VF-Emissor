@@ -1,0 +1,14 @@
+#duplicate-review .dialog-body{font-size:1rem;line-height:1.6}
+#duplicate-review .duplicate-intro .notice{font-size:.95rem}
+#duplicate-review th{font-size:.8rem}
+#duplicate-review td{font-size:.9rem}
+#duplicate-review td small{display:block;color:var(--muted);font-size:.8rem;margin-top:4px}
+#duplicate-review td button{font-size:.875rem}
+#duplicate-justification-form{margin-top:24px}
+#duplicate-justification-form .field,#duplicate-justification-form .check{font-size:.9rem}
+#duplicate-reason{min-height:110px;font-size:.95rem;line-height:1.6}
+#duplicate-justification-form .hint{font-size:.8rem;line-height:1.7}
+#duplicate-form-error{color:#a54434;font-size:.9rem;min-height:1.5em;margin:10px 0 0}
+#duplicate-review .dialog-foot button{white-space:normal;font-size:.875rem}
+.duplicate-record p{white-space:pre-wrap;overflow-wrap:anywhere}
+.duplicate-record small{font-size:.8rem;color:var(--muted)}

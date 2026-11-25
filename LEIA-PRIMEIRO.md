@@ -1,4 +1,4 @@
-# VF Emissor 0.20.0 — Windows
+# VF Emissor 0.20.1 — Windows
 
 O controle de acesso já vem ativado neste instalador. Entre com e-mail e senha e solicite a aprovação do CNPJ. As empresas antigas também precisam de aprovação: os dados e XML continuam no computador e são reconhecidos pelo CNPJ depois da liberação. Leia **ACESSO-E-ASSINATURAS.md**.
 
@@ -13,7 +13,7 @@ No canto superior direito, o resumo mostra a validade da assinatura e o ambiente
 ## Instalar e abrir
 
 1. Encerre a versão antiga do emissor.
-2. Execute **VF-Emissor-Setup-0.20.0.exe** e conclua a instalação. Requer Windows 10/11 de 64 bits.
+2. Execute **VF-Emissor-Setup-0.20.1.exe** e conclua a instalação. Requer Windows 10/11 de 64 bits.
 3. Abra o atalho **VF Emissor** criado na área de trabalho ou no menu Iniciar.
 4. Entre com seu e-mail e senha ou solicite seu cadastro. Conta e CNPJ precisam de aprovação da administração.
 5. Em **Minhas empresas**, solicite o mesmo CNPJ que já utilizava. Depois da aprovação, selecione a empresa: os cadastros existentes são reutilizados. Em outro computador, restaure o backup da empresa após a liberação do CNPJ.
@@ -35,6 +35,10 @@ Cada empresa tem seus próprios cadastros, perfis, parâmetros e documentos. Dow
 Em **Configurações → Geral → Certificado A1**, selecione o A1 da empresa e deixe marcada a opção de salvar neste computador. Arquivo e senha são guardados juntos, criptografados pela DPAPI da conta do Windows. O certificado é restaurado nos próximos acessos sem selecionar o PFX e digitar a senha novamente.
 
 O cofre é separado por empresa. Um certificado vencido ou que não possa ser aberto gera uma indicação para recarregá-lo. Em outro computador/conta do Windows, carregue o A1 novamente. Use **Remover A1 salvo** para apagar somente o cofre da empresa ativa.
+
+## Justificar uma nova operação semelhante
+
+Ao clicar em **Salvar e enviar** (modo completo) ou **Emitir NF-e** (modo simples), o programa confere se há nota semelhante já autorizada. Se existir, abre **Justificar nova operação**. Confira os documentos em **Ver nota**, descreva a nova venda com pelo menos 15 caracteres, marque a confirmação e clique em **Confirmar justificativa e continuar**. Use dados reais, como pedido e data. A justificativa fica nos detalhes da nova NF-e como registro interno. **Voltar sem emitir** mantém a nova nota em rascunho. Documento em processamento ou com resultado incerto exige consulta da nota existente.
 
 ## Produtos
 

@@ -43,6 +43,10 @@ jobs:
           if ($LASTEXITCODE) { throw 'Regressao do certificado na interface.' }
           node --check .\static\access-ui.js
           if ($LASTEXITCODE) { throw 'Interface de acesso invalida.' }
+          node --check .\static\duplicate-ui.js
+          if ($LASTEXITCODE) { throw 'Interface de duplicidade invalida.' }
+          node --test .\tests\duplicate-ui.test.cjs
+          if ($LASTEXITCODE) { throw 'Fluxo de justificativa invalido.' }
           node --check .\static\motion-ui.js
           if ($LASTEXITCODE) { throw 'Interface de movimento invalida.' }
           node --check .\portal\app.js

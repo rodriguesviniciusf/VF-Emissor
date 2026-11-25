@@ -1,4 +1,13 @@
-VF Emissor 0.20.0
+VF Emissor 0.20.1
+
+- Corrigido o bloqueio que solicitava uma justificativa de nova operação sem oferecer campo para preenchê-la.
+- Ao preparar uma nota semelhante a outra autorizada, exibe documentos existentes, destinatário, data, ambiente e acesso aos detalhes.
+- Justificativa de 15 a 1.000 caracteres com confirmação de nova operação legítima; funciona nos modos completo e simples.
+- Cancelar a conferência mantém o rascunho. Operações em processamento ou com resultado incerto continuam bloqueadas para consulta.
+- Documento e conjunto de notas semelhantes são conferidos novamente antes de assinar. A justificativa fica no snapshot fiscal local e nos detalhes da nota, sem compor o XML de dados adicionais.
+- Testes de isolamento por empresa/ambiente, revisão desatualizada, confirmação, cancelamento e continuidade do fluxo.
+
+Histórico — VF Emissor 0.20.0
 
 - Visual refinado no login, cadastro, recuperação e escolha de empresa, mantendo a paleta verde e clara do programa.
 - Login com área de apresentação e formulário centralizado; cartões de empresas com status, validade e acesso bem definidos.

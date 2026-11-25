@@ -13,7 +13,7 @@ from core import Store, calculate, number, money, document, valid_document, vali
 from fiscal import FiscalStore, FiscalService, A1Certificate, build_unsigned, unsigned_schema_issues, parse_xml, text, NS, TZ, render_danfe, validate_schema
 from fiscal_events import EventStore, EventService
 from note_validation import validate_note
-from vf_workflow import next_number, duplicate, preview_html
+from vf_workflow import next_number, duplicate, preview_html, similar, approval_token, check_duplicates
 import editor_recovery
 import simple_mode
 import ncm_catalog,nature_catalog
@@ -184,6 +184,18 @@ def editable(cid, rid):
     if d and d[0] not in ('PREPARADA', 'REJEITADA'):
         raise ValueError('O documento já foi transmitido. Consulte a situação fiscal; ele não pode ser alterado.')
 
+def duplicate_review(cid, rid):
+    """Read-only comparison of a saved draft with this company's fiscal history."""
+    n=note(cid,rid);editable(cid,rid);snap=snapshot(cid,n)
+    matches=similar(STORE,cid,snap,rid);token=approval_token(snap,matches)
+    blocked=any(m['status']!='AUTORIZADA' for m in matches)
+    public=[]
+    for match in matches:
+        doc=FiscalStore(STORE).get(cid,match['id']);old=json.loads(doc['snapshot'])
+        public.append(dict(source=doc['source'],number=match['number'],series=match['series'],status=match['status'],issued_at=old['note'].get('issued_at',''),key=doc['access_key']))
+    approved=bool(matches) and not blocked and n.get('duplicate_approval')==token and len(n.get('duplicate_reason','').strip())>=15
+    return dict(matches=public,blocked=blocked,approved=approved,token=token,revision=editor_recovery.revision(n),recipient=snap['recipient'].get('xNome',''),environment=n.get('environment','2'))
+
 def get_state(cid=''):
     all_companies = rows('company')
     if not cid and all_companies and PREVIEW and os.environ.get('VF_PREVIEW_LOGIN')!='1': cid = all_companies[0]['_id']
@@ -203,7 +215,7 @@ def get_state(cid=''):
         except ValueError: recipient = ''
         documents.append(dict(n, _edit_revision=editor_recovery.revision({k:v for k,v in n.items() if k!='_id'}), _total=str(money((historical['note'] if historical else n).get('normal_vnftot') or values.get('net','0'))), _errors=errors, _recipient=recipient,
             _fiscal_id=d['id'] if d else '', _status=d['status'] if d else 'RASCUNHO',
-            _key=d['access_key'] if d else '', _reason=d['reason'] if d else ''))
+            _key=d['access_key'] if d else '', _reason=d['reason'] if d else '', _duplicate_reason=historical['note'].get('duplicate_reason','') if historical else ''))
     events = []
     for env in ('1', '2'):
         for e in EventStore(STORE).list(cid, env):
@@ -459,6 +471,7 @@ def action(p):
         from web_settings import new_note_defaults
         return dict(note=dict(new_note_defaults(STORE,cid),environment=env,series=series,number='',has_reference='0',references='',items=[],issued_at=datetime.now(TZ).isoformat(timespec='seconds')))
     if cmd == 'duplicate': return dict(note=duplicate(STORE, cid, note(cid, p['id'])))
+    if cmd == 'duplicate_review': return duplicate_review(cid,p['id'])
     if cmd == 'normal_calculate':
         from normal_fiscal import normalized,calculate_normal
         i=p['item'];groups,_=normalized(i,i['rule']);values=calculate_normal(i,i['rule'],validate=False)
@@ -494,6 +507,15 @@ def action(p):
         if problems:raise ValueError(problems[0]['message'])
         if n.get('simple_mode',{}).get('active') and p.get('simple_review_hash')!=simple_mode.review_hash(n):raise ValueError('Confira novamente o resumo do Modo Simples antes de emitir.')
         snap = checked_snapshot(cid, n)
+        if p.get('duplicate_ack') is True:
+            review=duplicate_review(cid,p['id'])
+            if review['blocked']:raise ValueError('A nota semelhante ainda está em processamento ou com situação incerta. Consulte a situação antes de criar outra.')
+            if not review['matches'] or p.get('duplicate_approval')!=review['token'] or p.get('duplicate_revision')!=review['revision']:
+                raise ValueError('A nota ou os documentos semelhantes mudaram. Confira novamente a duplicidade antes de continuar.')
+            reason=str(p.get('duplicate_reason','')).strip()
+            if not 15<=len(reason)<=1000:raise ValueError('Descreva a nova operação em uma justificativa de 15 a 1.000 caracteres.')
+            n.update(duplicate_approval=review['token'],duplicate_reason=reason,duplicate_reviewed_at=datetime.now(TZ).isoformat(timespec='seconds'))
+        check_duplicates(STORE,cid,snap,p['id'])
         cert = certificate(cid); unsigned, key, _ = build_unsigned(snap['company'], snap['recipient'], n)
         signed = cert.sign(unsigned)
         fid = FiscalStore(STORE).prepare(cid, p['id'], snap, signed, key)
@@ -583,7 +605,7 @@ class Handler(BaseHTTPRequestHandler):
                 f=ROOT/'portal'/('index.html' if u.path=='/gestao/' else u.path.split('/')[-1])
                 return self.reply(f.read_bytes(),mimetypes.guess_type(f)[0] or 'text/plain',portal=True)
             if u.path=='/municipios.json':return self.reply((ROOT/'base/assets/municipios.json').read_bytes())
-            if u.path in ('/', '/motion-ui.js','/premium.css', '/access-ui.js','/access.css', '/interstate-ui.js', '/interstate.css', '/ncm-ui.js', '/ncm.css', '/simple-ui.js', '/simple.css', '/assistance-ui.js', '/assistance.css', '/app.js', '/normal-ui.js', '/product-ui.js', '/settings-ui.js', '/desktop-ui.js', '/workspace-ui.js', '/workspace.css', '/business-ui.js', '/business.css', '/style.css', '/favicon.svg'):
+            if u.path in ('/', '/duplicate-ui.js','/duplicate.css', '/motion-ui.js','/premium.css', '/access-ui.js','/access.css', '/interstate-ui.js', '/interstate.css', '/ncm-ui.js', '/ncm.css', '/simple-ui.js', '/simple.css', '/assistance-ui.js', '/assistance.css', '/app.js', '/normal-ui.js', '/product-ui.js', '/settings-ui.js', '/desktop-ui.js', '/workspace-ui.js', '/workspace.css', '/business-ui.js', '/business.css', '/style.css', '/favicon.svg'):
                 f = ROOT/'static'/('index.html' if u.path=='/' else u.path[1:])
                 return self.reply(f.read_bytes(), mimetypes.guess_type(f)[0] or 'text/plain', session=u.path=='/')
             if u.path == '/health': return self.reply(dict(app='VF Emissor Web', version=VERSION))
